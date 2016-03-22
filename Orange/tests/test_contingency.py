@@ -12,20 +12,20 @@ class Discrete_Test(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         data.table.dataset_dirs.append("Orange/tests")
+        cls.zoo = data.Table("zoo")
 
     def test_discrete(self):
-        d = data.Table("zoo")
-        cont = contingency.Discrete(d, 0)
+        cont = contingency.Discrete(self.zoo, 0)
         np.testing.assert_almost_equal(cont["amphibian"], [4, 0])
         np.testing.assert_almost_equal(cont,
             [[4, 0], [20, 0], [13, 0], [4, 4], [10, 0], [2, 39], [5, 0]])
 
-        cont = contingency.Discrete(d, "predator")
+        cont = contingency.Discrete(self.zoo, "predator")
         np.testing.assert_almost_equal(cont["fish"], [4, 9])
         np.testing.assert_almost_equal(cont,
             [[1, 3], [11, 9], [4, 9], [7, 1], [2, 8], [19, 22], [1, 4]])
 
-        cont = contingency.Discrete(d, d.domain["predator"])
+        cont = contingency.Discrete(self.zoo, self.zoo.domain["predator"])
         np.testing.assert_almost_equal(cont["fish"], [4, 9])
         np.testing.assert_almost_equal(cont,
             [[1, 3], [11, 9], [4, 9], [7, 1], [2, 8], [19, 22], [1, 4]])
