@@ -12,7 +12,8 @@ def flatten(seq):
 
 
 class TestHierarchical(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         m = [[],
              [ 3],
              [ 2, 4],

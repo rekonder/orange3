@@ -6,7 +6,8 @@ from Orange.classification import EllipticEnvelopeLearner
 
 
 class EllipticEnvelopeTest(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         np.random.seed(42)
         domain = Domain((ContinuousVariable("c1"), ContinuousVariable("c2")))
         self.n_true_in, self.n_true_out = 80, 20
@@ -25,10 +26,10 @@ class EllipticEnvelopeTest(unittest.TestCase):
         n_pred_out_true_o = np.sum(y_pred[- self.n_true_out:] == -1)
 
         self.assertTrue(all(np.absolute(y_pred) == 1))
-        self.assertTrue(n_pred_out_all <= len(self.X_all) * self.cont)
-        self.assertTrue(np.absolute(n_pred_out_all - self.n_true_out) < 1)
-        self.assertTrue(np.absolute(n_pred_in_true_in - self.n_true_in) < 2)
-        self.assertTrue(np.absolute(n_pred_out_true_o - self.n_true_out) < 2)
+        self.assertGreaterEqual(len(self.X_all) * self.cont, n_pred_out_all)
+        self.assertGreater(1, np.absolute(n_pred_out_all - self.n_true_out))
+        self.assertGreater(2, np.absolute(n_pred_in_true_in - self.n_true_in))
+        self.assertGreater(2, np.absolute(n_pred_out_true_o - self.n_true_out))
 
     def test_mahalanobis(self):
         n = len(self.X_all)

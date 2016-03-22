@@ -29,8 +29,9 @@ class VariableTest:
 
 
 class BaseVariableTest(unittest.TestCase):
-    def setUp(self):
-        self.var = Variable("x")
+    @classmethod
+    def setUpClass(cls):
+        cls.var = Variable("x")
 
     def test_name(self):
         self.assertEqual(repr(self.var), "Variable('x')")

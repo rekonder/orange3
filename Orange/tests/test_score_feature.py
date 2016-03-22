@@ -9,7 +9,8 @@ from Orange import preprocess
 
 class FeatureScoringTest(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.zoo = Table("zoo")  # disc. features, disc. class
         self.housing = Table("housing")  # cont. features, cont. class
         self.monk = Table("monks-1")

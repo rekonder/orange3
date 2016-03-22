@@ -11,9 +11,10 @@ from Orange.evaluation import CrossValidation, CA, RMSE
 
 
 class SVMTest(unittest.TestCase):
-    def setUp(self):
-        self.data = Table('ionosphere')
-        self.data.shuffle()
+    @classmethod
+    def setUpClass(cls):
+        cls.data = Table('ionosphere')
+        cls.data.shuffle()
 
     def test_SVM(self):
         learn = SVMLearner()
