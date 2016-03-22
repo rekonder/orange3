@@ -174,7 +174,8 @@ class TestDiscretizer(TestCase):
 
 # noinspection PyPep8Naming
 class TestDiscretizeTable(TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         s = [0] * 50 + [1] * 50
         X1 = np.array(s).reshape((100, 1))
         X2 = np.arange(100).reshape((100, 1))
