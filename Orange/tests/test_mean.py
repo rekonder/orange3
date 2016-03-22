@@ -41,7 +41,7 @@ class MeanTest(unittest.TestCase):
         learn = MeanLearner()
         clf = learn(autompg[:0])
         y = clf(autompg[0])
-        self.assertTrue(y == 0)
+        self.assertEqual(y, 0)
 
     def test_discrete(self):
         iris = Table('iris')

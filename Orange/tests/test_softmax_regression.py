@@ -15,7 +15,8 @@ class SoftmaxRegressionTest(unittest.TestCase):
         learner = SoftmaxRegressionLearner()
         results = CrossValidation(self.iris, [learner], k=3)
         ca = CA(results)
-        self.assertTrue(0.9 < ca < 1.0)
+        self.assertGreater(ca, 0.9)
+        self.assertLess(ca, 1.0)
 
     def test_SoftmaxRegressionPreprocessors(self):
         table = self.iris.copy()
@@ -25,13 +26,13 @@ class SoftmaxRegressionTest(unittest.TestCase):
                     SoftmaxRegressionLearner()]
         results = CrossValidation(table, learners, k=10)
         ca = CA(results)
-        self.assertTrue(ca[0] < ca[1])
+        self.assertLess(ca[0],ca[1])
 
     def test_probability(self):
         learn = SoftmaxRegressionLearner()
         clf = learn(self.iris)
         p = clf(self.iris, ret=Model.Probs)
-        self.assertTrue(all(abs(p.sum(axis=1) - 1) < 1e-6))
+        self.assertLess(abs(p.sum(axis=1) - 1).all(), 1e-6)
 
     def test_predict_table(self):
         learner = SoftmaxRegressionLearner()

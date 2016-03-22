@@ -611,7 +611,7 @@ class TableTestCase(unittest.TestCase):
         x.ensure_copy()
         d.extend(x)
         for i in range(5):
-            self.assertTrue(d[i] == d[-5 + i])
+            self.assertEqual(d[i], d[-5 + i])
 
         x = d[:5]
         with self.assertRaises(ValueError):
@@ -994,7 +994,7 @@ class TableTestCase(unittest.TestCase):
 
         f.values = ["mammal"]
         for e in filter.Values([f])(d):
-            self.assertTrue(e.get_class() == "mammal")
+            self.assertEqual(e.get_class(), "mammal")
 
         f = filter.FilterDiscrete(d.domain.class_var, values=[2, "mammal"])
         for e in filter.Values([f])(d):
@@ -1182,9 +1182,9 @@ class TableTestCase(unittest.TestCase):
                                            table_metas.domain.metas,
                                            table_metas.domain.metas),
                                table_metas)
-        self.assertTrue(new_table.X.dtype == np.float64)
-        self.assertTrue(new_table.Y.dtype == np.float64)
-        self.assertTrue(new_table.metas.dtype == np.float64)
+        self.assertEqual(new_table.X.dtype, np.float64)
+        self.assertEqual(new_table.Y.dtype, np.float64)
+        self.assertEqual(new_table.metas.dtype, np.float64)
 
     # TODO Test conjunctions and disjunctions of conditions
 

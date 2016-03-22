@@ -72,6 +72,6 @@ class UtilTest(unittest.TestCase):
 
         with self.assertWarns(DeprecationWarning) as cm:
             x = identity(10)
-        self.assertTrue(x == 10)
+        self.assertEqual(x, 10)
         self.assertTrue('deprecated' in cm.warning.args[0])
         self.assertTrue('identity' in cm.warning.args[0])

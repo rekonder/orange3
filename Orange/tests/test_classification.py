@@ -77,10 +77,10 @@ class ModelTest(unittest.TestCase):
         clf = learn(t)
         clf.ret = Model.Probs
         y2 = clf(x, ret=Model.Value)
-        self.assertTrue(y2.shape == (nrows,))
+        self.assertEqual(y2.shape, (nrows,))
         y2, probs = clf(x, ret=Model.ValueProbs)
-        self.assertTrue(y2.shape == (nrows, ))
-        self.assertTrue(probs.shape == (nrows, 2))
+        self.assertEqual(y2.shape, (nrows, ))
+        self.assertEqual(probs.shape, (nrows, 2))
 
         # multitarget
         y = np.random.random_integers(1, 5, (nrows, 2))
@@ -185,7 +185,8 @@ class SklTest(unittest.TestCase):
         lr = LogisticRegressionLearner()
         assert isinstance(lr, Orange.classification.SklLearner)
         res = CrossValidation(table, [lr], k=2)
-        self.assertTrue(0.7 < Orange.evaluation.AUC(res)[0] < 0.9)
+        self.assertGreater(Orange.evaluation.AUC(res)[0], 0.7)
+        self.assertLess(Orange.evaluation.AUC(res)[0], 0.9)
 
     def test_nan_columns(self):
         data = Orange.data.Table("iris")

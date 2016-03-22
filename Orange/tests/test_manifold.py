@@ -8,9 +8,11 @@ from Orange.data import  Table
 
 
 class TestManifold(unittest.TestCase):
+
     @classmethod
     def setUpClass(cls):
         cls.ionosphere = Table('ionosphere')
+
     def test_mds(self):
         data = self.ionosphere[:50]
         self.__mds_test_helper(data, n_com=1)
