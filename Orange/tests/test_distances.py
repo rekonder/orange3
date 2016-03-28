@@ -11,7 +11,7 @@ from Orange.distance import (Euclidean, SpearmanR, SpearmanRAbsolute,
                              Jaccard, _preprocess)
 from Orange.misc import DistMatrix
 from Orange.tests import named_file
-from Orange.util import OrangeDeprecationWarning
+from Orange.util import OrangeDeprecationWarningz
 
 
 def tables_equal(tab1, tab2):
