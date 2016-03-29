@@ -11,19 +11,20 @@ from Orange.distance import (Euclidean, SpearmanR, SpearmanRAbsolute,
                              Jaccard, _preprocess)
 from Orange.misc import DistMatrix
 from Orange.tests import named_file
-from Orange.util import OrangeDeprecationWarningz
+from Orange.util import OrangeDeprecationWarning
 
 
 def tables_equal(tab1, tab2):
     # TODO: introduce Table.__eq__() ???
     return (tab1 == tab2 or  # catches None
-            np.all([i == j for i, j in zip(tab1, tab2)]))
+        np.all([i == j for i, j in zip(tab1, tab2)]))
 
 
 class TestDistMatrix(TestCase):
     def setUp(self):
         self.iris = Table('iris')
         self.dist = Euclidean(self.iris)
+
 
     def test_submatrix(self):
         sub = self.dist.submatrix([2, 3, 4])
