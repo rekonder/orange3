@@ -188,21 +188,13 @@ class Distribution_ContinuousTestCase(unittest.TestCase):
         d = data.Table("iris")
         petal_length = d.columns.petal_length
 
-        disc = distribution.Continuous(d, "petal length")
-        self.assertIsInstance(disc, np.ndarray)
-        self.assertIs(disc.variable, petal_length)
-        self.assertEqual(disc.unknowns, 0)
-        np.testing.assert_almost_equal(disc, self.freqs)
+        for attr in ["petal length", d.domain[2], 2]:
+            disc = distribution.Continuous(d, attr)
+            self.assertIsInstance(disc, np.ndarray)
+            self.assertIs(disc.variable, petal_length)
+            self.assertEqual(disc.unknowns, 0)
+            np.testing.assert_almost_equal(disc, self.freqs)
 
-        disc2 = distribution.Continuous(d, d.domain[2])
-        self.assertIsInstance(disc2, np.ndarray)
-        self.assertIs(disc2.variable, petal_length)
-        self.assertEqual(disc, disc2)
-
-        disc3 = distribution.Continuous(d, 2)
-        self.assertIsInstance(disc3, np.ndarray)
-        self.assertIs(disc3.variable, petal_length)
-        self.assertEqual(disc, disc3)
 
 
 
@@ -275,7 +267,6 @@ class Distribution_ContinuousTestCase(unittest.TestCase):
 
     def test_modus(self):
         d = data.Table("iris")
-        petal_length = d.columns.petal_length
 
         disc = distribution.Continuous([list(range(5)), [1, 1, 2, 5, 1]])
         self.assertEqual(disc.modus(), 3)
@@ -283,7 +274,6 @@ class Distribution_ContinuousTestCase(unittest.TestCase):
 
     def test_random(self):
         d = data.Table("iris")
-        petal_length = d.columns.petal_length
 
         disc = distribution.Continuous(d, "petal length")
         ans = set()
@@ -291,7 +281,7 @@ class Distribution_ContinuousTestCase(unittest.TestCase):
             v = disc.random()
             self.assertTrue(v in self.freqs)
             ans.add(v)
-        self.assertTrue(len(ans) > 10)
+        self.assertGreater(len(ans), 10)
 
 
 class Class_Distribution_Test(unittest.TestCase):
