@@ -1,13 +1,13 @@
 import unittest
-import Orange
 import numpy as np
+import Orange
 
 from Orange.classification import NaiveBayesLearner, MajorityLearner
 from Orange.classification.majority import ConstantModel
 from Orange.classification.naive_bayes import NaiveBayesModel
 from Orange.regression import LinearRegressionLearner, MeanLearner
 from Orange.data import Table
-from Orange.evaluation import *
+from Orange.evaluation import CrossValidation, LeaveOneOut, TestOnTrainingData, TestOnTestData, ShuffleSplit
 from Orange.preprocess import discretize, preprocess
 
 
@@ -140,7 +140,6 @@ class CrossValidationTestCase(unittest.TestCase, CommonSamplingTests):
             self.assertIsInstance(models[1], ConstantModel)
 
     def test_10_fold_probs(self):
-        #data = Table('iris')[30:130]
         learners = [MajorityLearner(), MajorityLearner()]
 
         results = CrossValidation(self.iris[30:130], learners, k=10)

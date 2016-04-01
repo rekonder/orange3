@@ -2,7 +2,6 @@ import unittest
 
 import numpy as np
 
-import Orange
 from Orange.classification import (SVMLearner, LinearSVMLearner,
                                    NuSVMLearner, OneClassSVMLearner)
 from Orange.regression import (SVRLearner, NuSVRLearner)

@@ -1,9 +1,9 @@
 import unittest
+import numpy as np
 
 from Orange.data import Table, ContinuousVariable, Domain
 from Orange.classification import LogisticRegressionLearner, Model
 from Orange.evaluation import CrossValidation, CA
-import numpy as np
 
 
 class LogisticRegressionTest(unittest.TestCase):

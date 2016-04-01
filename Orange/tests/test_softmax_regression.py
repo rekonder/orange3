@@ -1,9 +1,8 @@
 import unittest
 
-from Orange.data import ContinuousVariable, Domain, Table
+from Orange.data import Table
 from Orange.classification import Model, SoftmaxRegressionLearner
 from Orange.evaluation import CrossValidation, CA
-import numpy as np
 
 
 class SoftmaxRegressionTest(unittest.TestCase):
@@ -20,13 +19,13 @@ class SoftmaxRegressionTest(unittest.TestCase):
 
     def test_SoftmaxRegressionPreprocessors(self):
         table = self.iris.copy()
-        table.X[:,2] = table.X[:,2] * 0.001
-        table.X[:,3] = table.X[:,3] * 0.001
+        table.X[:, 2] = table.X[:, 2] * 0.001
+        table.X[:, 3] = table.X[:, 3] * 0.001
         learners = [SoftmaxRegressionLearner(preprocessors=[]),
                     SoftmaxRegressionLearner()]
         results = CrossValidation(table, learners, k=10)
         ca = CA(results)
-        self.assertLess(ca[0],ca[1])
+        self.assertLess(ca[0], ca[1])
 
     def test_probability(self):
         learn = SoftmaxRegressionLearner()

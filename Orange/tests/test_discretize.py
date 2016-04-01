@@ -100,7 +100,7 @@ class TestEntropyMDL(TestCase):
 
     def test_entropy(self):
         X = np.array([0] * 25 + [1] * 25 + [2] * 25 + [3] * 25
-                     ).reshape((100, 1))
+                    ).reshape((100, 1))
         Y = np.array([0] * 25 + [1] * 75)
         table = data.Table(X, Y)
         disc = discretize.EntropyMDL()
@@ -136,7 +136,7 @@ class TestDiscretizer(TestCase):
             self.var, [10.1234])
         self.assertEqual(dvar.values, ["< 10.1", "≥ 10.1"])
 
-        self.var.number_of_decimals=3
+        self.var.number_of_decimals = 3
 
         dvar = discretize.Discretizer.create_discretized_var(
             self.var, [5, 10.1234])

@@ -15,17 +15,17 @@ class TestHierarchical(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         m = [[],
-             [ 3],
-             [ 2, 4],
+             [3],
+             [2, 4],
              [17, 5, 4],
-             [ 2, 8, 3, 8],
-             [ 7, 5, 10, 11, 2],
-             [ 8, 4, 1, 5, 11, 13],
-             [ 4, 7, 12, 8, 10, 1, 5],
+             [2, 8, 3, 8],
+             [7, 5, 10, 11, 2],
+             [8, 4, 1, 5, 11, 13],
+             [4, 7, 12, 8, 10, 1, 5],
              [13, 9, 14, 15, 7, 8, 4, 6],
              [12, 10, 11, 15, 2, 5, 7, 3, 1]]
         cls.items = ["Ann", "Bob", "Curt", "Danny", "Eve", "Fred",
-                      "Greg", "Hue", "Ivy", "Jon"]
+                     "Greg", "Hue", "Ivy", "Jon"]
 
         dist = numpy.array(list(flatten(m)), dtype=float)
         matrix = hierarchical.squareform(dist, mode="lower")

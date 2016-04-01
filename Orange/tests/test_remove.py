@@ -32,7 +32,7 @@ class TestRemover(unittest.TestCase):
                              {'removed': 1, 'reduced': 0, 'sorted': 0})
 
     def test_remove_constant_attr(self):
-        data =self.test8
+        data = self.test8
         remover = Remove(Remove.RemoveConstant)
         new_data = remover(data)
         attr_res, class_res = remover.attr_results, remover.class_results

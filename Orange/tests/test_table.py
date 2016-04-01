@@ -4,12 +4,12 @@ from itertools import chain
 from math import isnan
 import random
 
+from unittest.mock import Mock, MagicMock, patch
+import numpy as np
+
 from Orange import data
 from Orange.data import filter, Variable
 from Orange.data import Unknown
-
-import numpy as np
-from unittest.mock import Mock, MagicMock, patch
 
 
 @np.vectorize
@@ -657,7 +657,7 @@ class TableTestCase(unittest.TestCase):
         t3 = data.Table.concatenate((t1, t2))
         self.assertEqual(t3.domain.attributes, t1.domain.attributes + t2.domain.attributes)
         self.assertEqual(len(t3.domain.metas), 1)
-        self.assertEqual(t3.X.shape, (2,2))
+        self.assertEqual(t3.X.shape, (2, 2))
         self.assertRaises(ValueError, lambda: data.Table.concatenate((t3, t1)))
 
         t4 = data.Table.concatenate((t3, t3), axis=0)
@@ -887,7 +887,7 @@ class TableTestCase(unittest.TestCase):
                                     min=4.5, max=5.1)
 
         x = filter.Values([f])(d)
-        self.assertTrue(np.all(4.5 <= x.X[:, 2]))
+        self.assertTrue(np.all(x.X[:, 2] >= 4.5))
         self.assertTrue(np.all(x.X[:, 2] <= 5.1))
         self.assertEqual(sum((col >= 4.5) * (col <= 5.1)), len(x))
 
@@ -1058,7 +1058,7 @@ class TableTestCase(unittest.TestCase):
         f.oper = f.Between
         f.max = "lion"
         x = filter.Values([f])(d)
-        self.assertEqual(len(x), sum(("girl" <= col) * (col <= "lion")))
+        self.assertEqual(len(x), sum((col >= "girl") * (col <= "lion")))
         self.assertTrue(np.all(x.metas >= "girl"))
         self.assertTrue(np.all(x.metas <= "lion"))
 
@@ -1213,7 +1213,7 @@ class TableTests(unittest.TestCase):
         if len(self.class_vars) == 1:
             self.class_data = self.class_data.flatten()
         self.meta_data = np.random.randint(0, 5, (self.nrows, len(self.metas))
-                                           ).astype(object)
+                                          ).astype(object)
         self.weight_data = np.random.random((self.nrows, 1))
 
     def mock_domain(self, with_classes=False, with_metas=False):
@@ -1308,12 +1308,14 @@ class CreateTableWithUrl(TableTests):
         np.testing.assert_array_equal(d1.Y, d2.Y)
 
     class _MockUrlOpen(MagicMock):
-        headers = {'content-disposition':
-            'attachment; filename="Something-FormResponses.tsv"; '
-            'filename*=UTF-8''Something%20%28Responses%29.tsv'}
+        headers = {'content-disposition': 'attachment; filename="Something-FormResponses.tsv"; '
+                                          'filename*=UTF-8''Something%20%28Responses%29.tsv'}
         url = 'https://docs.google.com/spreadsheets/d/ABCD/edit'
+
         def __enter__(self): return self
+
         def __exit__(self, *args, **kwargs): pass
+
         def read(self): return b'''\
 a\tb\tc
 1\t2\t3
@@ -1324,7 +1326,8 @@ a\tb\tc
     @patch('Orange.data.table.urlopen', urlopen)
     def test_google_sheets(self):
         d = data.Table(self.urlopen.url)
-        self.urlopen.assert_called_with('https://docs.google.com/spreadsheets/d/ABCD/export?format=tsv', timeout=10)
+        self.urlopen.assert_called_with('https://docs.google.com/spreadsheets/d/ABCD/export?format=tsv',
+                                        timeout=10)
         self.assertEqual(len(d), 2)
         self.assertEqual(d.name, 'Something-FormResponses')
 

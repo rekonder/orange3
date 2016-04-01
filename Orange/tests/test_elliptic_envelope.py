@@ -13,7 +13,7 @@ class EllipticEnvelopeTest(unittest.TestCase):
         cls.n_true_in, cls.n_true_out = 80, 20
         cls.X_in = 0.3 * np.random.randn(cls.n_true_in, 2)
         cls.X_out = np.random.uniform(low=-4, high=4,
-                                       size=(cls.n_true_out, 2))
+                                      size=(cls.n_true_out, 2))
         cls.X_all = Table(domain, np.r_[cls.X_in, cls.X_out])
         cls.cont = cls.n_true_out / (cls.n_true_in + cls.n_true_out)
         cls.learner = EllipticEnvelopeLearner(contamination=cls.cont)

@@ -1,8 +1,7 @@
 import unittest
-import numpy as np
 import pickle
+import numpy as np
 
-import Orange
 from Orange.preprocess import Continuize, Normalize
 from Orange.projection import PCA, SparsePCA, RandomizedPCA, IncrementalPCA
 from Orange.data import Table

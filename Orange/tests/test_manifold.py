@@ -1,8 +1,7 @@
 import unittest
 import numpy as np
 
-import Orange
-from Orange.projection import MDS, Isomap, LocallyLinearEmbedding
+from Orange.projection import MDS, Isomap
 from Orange.distance import Euclidean
 from Orange.data import  Table
 

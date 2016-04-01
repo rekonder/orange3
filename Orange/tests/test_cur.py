@@ -10,7 +10,7 @@ class TestCUR(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.ionosphere =Orange.data.Table('ionosphere')
+        cls.ionosphere = Orange.data.Table('ionosphere')
 
     def test_cur_projection(self):
         self.__projection_test_helper(self.ionosphere, rank=10, max_error=10)

@@ -3,8 +3,8 @@ import pickle
 import pkgutil
 import unittest
 
-import numpy as np
 import traceback
+import numpy as np
 from Orange.base import SklLearner
 
 import Orange.classification
@@ -79,7 +79,7 @@ class ModelTest(unittest.TestCase):
         y2 = clf(x, ret=Model.Value)
         self.assertEqual(y2.shape, (nrows,))
         y2, probs = clf(x, ret=Model.ValueProbs)
-        self.assertEqual(y2.shape, (nrows, ))
+        self.assertEqual(y2.shape, (nrows,))
         self.assertEqual(probs.shape, (nrows, 2))
 
         # multitarget
@@ -144,7 +144,7 @@ class ExpandProbabilitiesTest(unittest.TestCase):
         attr_vars = [DiscreteVariable(name=a, values=range(2))
                      for a in attributes]
         class_vars = [DiscreteVariable(name=c,
-                                            values=range(class_var_domain))
+                                       values=range(class_var_domain))
                       for c in classes]
         meta_vars = []
         self.domain = Domain(attr_vars, class_vars, meta_vars)
@@ -205,17 +205,17 @@ class ClassfierListInputTest(unittest.TestCase):
     def test_discrete(self):
         table = Table("titanic")
         tree = Orange.classification.TreeLearner()(table)
-        strlist = [ [ "crew", "adult", "male" ],
-                    [ "crew", "adult", None ] ]
+        strlist = [["crew", "adult", "male"],
+                   ["crew", "adult", None]]
         for se in strlist: #individual examples
             assert(all(tree(se) == tree(Orange.data.Table(table.domain, [se]))))
         assert(all(tree(strlist) == tree(Orange.data.Table(table.domain, strlist))))
 
-    def test_continuous(lf):
+    def test_continuous(self):
         table = Table("iris")
         tree = Orange.classification.TreeLearner()(table)
-        strlist = [ [ 2, 3, 4, 5 ],
-                    [ 1, 2, 3, 5 ] ]
+        strlist = [[2, 3, 4, 5],
+                   [1, 2, 3, 5]]
         for se in strlist: #individual examples
             assert(all(tree(se) == tree(Orange.data.Table(table.domain, [se]))))
         assert(all(tree(strlist) == tree(Orange.data.Table(table.domain, strlist))))
