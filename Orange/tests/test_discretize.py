@@ -175,14 +175,14 @@ class TestDiscretizer(TestCase):
 # noinspection PyPep8Naming
 class TestDiscretizeTable(TestCase):
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         s = [0] * 50 + [1] * 50
         X1 = np.array(s).reshape((100, 1))
         X2 = np.arange(100).reshape((100, 1))
         X3 = np.ones((100, 1))
         X = np.hstack([X1, X2, X3])
-        self.table_no_class = data.Table(X)
-        self.table_class = data.Table(X, X1)
+        cls.table_no_class = data.Table(X)
+        cls.table_class = data.Table(X, X1)
 
     def test_discretize_exclude_constant(self):
         dom = discretize.DomainDiscretizer(self.table_no_class)

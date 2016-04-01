@@ -6,8 +6,8 @@ from Orange.clustering.kmeans import KMeans
 
 class KMeansTest(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
-        self.iris = Orange.data.Table('iris')
+    def setUpClass(cls):
+        cls.iris = Orange.data.Table('iris')
 
     def test_kmeans(self):
         kmeans = KMeans(n_clusters=2)

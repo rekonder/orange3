@@ -7,17 +7,17 @@ from Orange.classification import EllipticEnvelopeLearner
 
 class EllipticEnvelopeTest(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         np.random.seed(42)
         domain = Domain((ContinuousVariable("c1"), ContinuousVariable("c2")))
-        self.n_true_in, self.n_true_out = 80, 20
-        self.X_in = 0.3 * np.random.randn(self.n_true_in, 2)
-        self.X_out = np.random.uniform(low=-4, high=4,
-                                       size=(self.n_true_out, 2))
-        self.X_all = Table(domain, np.r_[self.X_in, self.X_out])
-        self.cont = self.n_true_out / (self.n_true_in + self.n_true_out)
-        self.learner = EllipticEnvelopeLearner(contamination=self.cont)
-        self.model = self.learner(self.X_all)
+        cls.n_true_in, cls.n_true_out = 80, 20
+        cls.X_in = 0.3 * np.random.randn(cls.n_true_in, 2)
+        cls.X_out = np.random.uniform(low=-4, high=4,
+                                       size=(cls.n_true_out, 2))
+        cls.X_all = Table(domain, np.r_[cls.X_in, cls.X_out])
+        cls.cont = cls.n_true_out / (cls.n_true_in + cls.n_true_out)
+        cls.learner = EllipticEnvelopeLearner(contamination=cls.cont)
+        cls.model = cls.learner(cls.X_all)
 
     def test_EllipticEnvelope(self):
         y_pred = self.model(self.X_all)

@@ -7,8 +7,8 @@ from Orange.clustering.dbscan import DBSCAN
 class DBSCANTest(unittest.TestCase):
 
     @classmethod
-    def setUpClass(self):
-        self.iris = Orange.data.Table('iris')
+    def setUpClass(cls):
+        cls.iris = Orange.data.Table('iris')
 
     def test_dbscan_parameters(self):
         dbscan = DBSCAN(eps=0.1, min_samples=7, metric='euclidean',
