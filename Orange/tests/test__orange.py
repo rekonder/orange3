@@ -4,38 +4,29 @@ from Orange.data import _valuecount
 
 
 class test_valuecount(unittest.TestCase):
+    def valuecount_helper(self, *args):
+        for arg in args:
+            a = np.array(arg[0])
+            b = _valuecount.valuecount(a)
+        if len(arg) == 2:
+            np.testing.assert_almost_equal(b, arg[-1])
+        else:
+            np.testing.assert_almost_equal(b, a)
+
+    def valuecount_raises_helper(self, *args):
+        for arg in args:
+            self.assertRaises(TypeError, _valuecount.valuecount, arg)
+
     def test_valuecount(self):
-        a = np.array([[1, 1, 1, 1], [0.1, 0.2, 0.3, 0.4]])
-        b = _valuecount.valuecount(a)
-        np.testing.assert_almost_equal(b, [[1], [1]])
 
-        a = np.array([[1, 1, 1, 2], [0.1, 0.2, 0.3, 0.4]])
-        b = _valuecount.valuecount(a)
-        np.testing.assert_almost_equal(b, [[1, 2], [0.6, 0.4]])
+        self.valuecount_helper([[[1, 1, 1, 1], [0.1, 0.2, 0.3, 0.4]], [[1], [1]]],
+                               [[[1, 1, 1, 2], [0.1, 0.2, 0.3, 0.4]], [[1, 2], [0.6, 0.4]]],
+                               [[[0, 1, 1, 2], [0.1, 0.2, 0.3, 0.4]], [[0, 1, 2], [0.1, 0.5, 0.4]]],
+                               [[[0, 1, 2, 3], [0.1, 0.2, 0.3, 0.4]]],
+                               [[[0], [0.1]]],
+                               [np.ones((2, 1))])
 
-        a = np.array([[0, 1, 1, 2], [0.1, 0.2, 0.3, 0.4]])
-        b = _valuecount.valuecount(a)
-        np.testing.assert_almost_equal(b, [[0, 1, 2], [0.1, 0.5, 0.4]])
-
-        a = np.array([[0, 1, 2, 3], [0.1, 0.2, 0.3, 0.4]])
-        b = _valuecount.valuecount(a)
-        np.testing.assert_almost_equal(b, a)
-
-        a = np.array([[0], [0.1]])
-        b = _valuecount.valuecount(a)
-        np.testing.assert_almost_equal(b, a)
-
-        a = np.ones((2, 1))
-        b = _valuecount.valuecount(a)
-        np.testing.assert_almost_equal(b, a)
-
-        a = np.array([[0, 1], [2, 3]])
-        self.assertRaises(ValueError, _valuecount.valuecount, a)
-
-        a = np.ones(2)
-        self.assertRaises(ValueError, _valuecount.valuecount, a)
-
-        a = np.ones((3, 3))
-        self.assertRaises(ValueError, _valuecount.valuecount, a)
-
-        self.assertRaises(TypeError, _valuecount.valuecount, None)
+        self.valuecount_raises_helper([np.array([[0, 1], [2, 3]])],
+                                      [np.ones(2)],
+                                      [np.ones((3, 3))],
+                                      [None])
