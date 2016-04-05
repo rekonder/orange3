@@ -121,20 +121,11 @@ class TestDomainInit(unittest.TestCase):
         self.assertEqual(d.metas, metas)
 
     def test_from_numpy_names(self):
-        d = Domain.from_numpy(np.zeros((1, 5)))
-        self.assertTrue(d.anonymous)
-        self.assertEqual([var.name for var in d.attributes],
-                         ["Feature {}".format(i) for i in range(1, 6)])
-
-        d = Domain.from_numpy(np.zeros((1, 99)))
-        self.assertTrue(d.anonymous)
-        self.assertEqual([var.name for var in d.attributes],
-                         ["Feature {:02}".format(i) for i in range(1, 100)])
-
-        d = Domain.from_numpy(np.zeros((1, 100)))
-        self.assertTrue(d.anonymous)
-        self.assertEqual([var.name for var in d.attributes],
-                         ["Feature {:03}".format(i) for i in range(1, 101)])
+        for x,y in [(5, "Feature {}"), (99, "Feature {:02}"), (100, "Feature {:03}")]:
+            d = Domain.from_numpy(np.zeros((1, x)))
+            self.assertTrue(d.anonymous)
+            self.assertEqual([var.name for var in d.attributes],
+                             [y.format(i) for i in range(1, x+1)])
 
         d = Domain.from_numpy(np.zeros((1, 1)))
         self.assertTrue(d.anonymous)
@@ -150,32 +141,25 @@ class TestDomainInit(unittest.TestCase):
                          ["Meta {:03}".format(i) for i in range(1, 101)])
 
     def test_from_numpy_dimensions(self):
-        d = Domain.from_numpy(np.zeros((1, 1)), np.zeros(5))
-        self.assertTrue(d.anonymous)
-        self.assertEqual(len(d.class_vars), 1)
-
-        d = Domain.from_numpy(np.zeros((1, 1)), np.zeros((5, 1)))
-        self.assertTrue(d.anonymous)
-        self.assertEqual(len(d.class_vars), 1)
+        for dimension in [[5], [5, 1]]:
+            d = Domain.from_numpy(np.zeros((1, 1)), np.zeros(dimension))
+            self.assertTrue(d.anonymous)
+            self.assertEqual(len(d.class_vars), 1)
 
         self.assertRaises(ValueError, Domain.from_numpy, np.zeros(2))
         self.assertRaises(ValueError, Domain.from_numpy, np.zeros((2, 2, 2)))
         self.assertRaises(ValueError, Domain.from_numpy, np.zeros((2, 2)), np.zeros((2, 2, 2)))
 
     def test_from_numpy_values(self):
-        d = Domain.from_numpy(np.zeros((1, 1)), np.arange(1, 3).reshape(2, 1))
-        self.assertTrue(d.anonymous)
-        self.assertIsInstance(d.class_var, ContinuousVariable)
+        for aran_min, aran_max, res_min, res_max, type in [(1, 3, 2, 1, ContinuousVariable),
+                                                           (0, 2, 2, 1, DiscreteVariable),
+                                                           (18, 23, 5, 1, ContinuousVariable)]:
+            d = Domain.from_numpy(np.zeros((1, 1)), np.arange(aran_min, aran_max).reshape(res_min, res_max))
+            self.assertTrue(d.anonymous)
+            self.assertIsInstance(d.class_var, type)
+            if isinstance(type, DiscreteVariable):
+                self.assertEqual(d.class_var.values, ["v{}".format(i) for i in range(1, 3)])
 
-        d = Domain.from_numpy(np.zeros((1, 1)), np.arange(2).reshape(2, 1))
-        self.assertTrue(d.anonymous)
-        self.assertIsInstance(d.class_var, DiscreteVariable)
-        self.assertEqual(d.class_var.values, ["v{}".format(i)
-                                              for i in range(1, 3)])
-
-        d = Domain.from_numpy(np.zeros((1, 1)), np.arange(18, 23).reshape(5, 1))
-        self.assertTrue(d.anonymous)
-        self.assertIsInstance(d.class_var, ContinuousVariable)
 
     def test_wrong_vartypes(self):
         attributes = (age, gender, income)
@@ -207,39 +191,19 @@ class TestDomainInit(unittest.TestCase):
 
     def test_get_item(self):
         d = Domain((age, gender, income), metas=(ssn, race))
-        self.assertEqual(d[age], age)
-        self.assertEqual(d["AGE"], age)
-        self.assertEqual(d[0], age)
-
-        self.assertEqual(d[income], income)
-        self.assertEqual(d["income"], income)
-        self.assertEqual(d[2], income)
-
-        self.assertEqual(d[ssn], ssn)
-        self.assertEqual(d["SSN"], ssn)
-        self.assertEqual(d[-1], ssn)
-
-        self.assertEqual(d[-2], race)
+        for x, y in [(age, age), ("AGE", age), (0, age),
+                     (income, income), ("income", income), (2, income),
+                     (ssn, ssn), ("SSN", ssn), (-1, ssn),
+                     (-2, race)]:
+            self.assertEqual(d[x], y)
 
     def test_index(self):
         d = Domain((age, gender, income), metas=(ssn, race))
-        self.assertEqual(d.index(age), 0)
-        self.assertEqual(d.index("AGE"), 0)
-        self.assertEqual(d.index(0), 0)
-        self.assertEqual(d.index(np.int_(0)), 0)
-
-        self.assertEqual(d.index(income), 2)
-        self.assertEqual(d.index("income"), 2)
-        self.assertEqual(d.index(2), 2)
-        self.assertEqual(d.index(np.int_(2)), 2)
-
-        self.assertEqual(d.index(ssn), -1)
-        self.assertEqual(d.index("SSN"), -1)
-        self.assertEqual(d.index(-1), -1)
-        self.assertEqual(d.index(np.int_(-1)), -1)
-
-        self.assertEqual(d.index(-2), -2)
-        self.assertEqual(d.index(np.int_(-2)), -2)
+        for x, y in [(age, 0), ("AGE", 0), (0, 0), (np.int_(0), 0),
+                     (income, 2), ("income", 2), (2, 2), (np.int_(2), 2),
+                     (ssn, -1), ("SSN", -1), (-1, -1), (np.int_(-1), -1),
+                     (-2,-2), (np.int_(-2), -2)]:
+            self.assertEqual(d.index(x), y)
 
     def test_get_item_slices(self):
         d = Domain((age, gender, income, race), metas=(ssn, race))
@@ -279,25 +243,11 @@ class TestDomainInit(unittest.TestCase):
 
     def test_contains(self):
         d = Domain((age, gender, income), metas=(ssn,))
-        self.assertTrue("AGE" in d)
-        self.assertTrue(age in d)
-        self.assertTrue(0 in d)
-        self.assertTrue(np.int_(0) in d)
-        self.assertTrue("income" in d)
-        self.assertTrue(income in d)
-        self.assertTrue(2 in d)
-        self.assertTrue(np.int_(2) in d)
-        self.assertTrue("SSN" in d)
-        self.assertTrue(ssn in d)
-        self.assertTrue(-1 in d)
-        self.assertTrue(np.int_(-1) in d)
+        for x in ["AGE", age, 0, np.int_(0), "income", income, 2, np.int_(2), "SSN", ssn, -1, np.int_(-1)]:
+            self.assertTrue(x in d)
 
-        self.assertFalse("no_such_thing" in d)
-        self.assertFalse(race in d)
-        self.assertFalse(3 in d)
-        self.assertFalse(np.int_(3) in d)
-        self.assertFalse(-2 in d)
-        self.assertFalse(np.int_(-2) in d)
+        for x in ["no_such_thing", race, 3, np.int_(3), -2, np.int_(-2)]:
+            self.assertFalse(x in d)
 
         with self.assertRaises(TypeError):
             {} in d
@@ -334,18 +284,18 @@ class TestDomainInit(unittest.TestCase):
             self.assertEqual(str(Domain(*args)), printout)
 
     def test_has_discrete(self):
+
         self.assertFalse(Domain([]).has_discrete_attributes())
         self.assertFalse(Domain([], [age]).has_discrete_attributes())
         self.assertFalse(Domain([], race).has_discrete_attributes())
-
         self.assertFalse(Domain([age], None).has_discrete_attributes())
         self.assertTrue(Domain([race], None).has_discrete_attributes())
         self.assertTrue(Domain([age, race], None).has_discrete_attributes())
         self.assertTrue(Domain([race, age], None).has_discrete_attributes())
 
-        self.assertFalse(Domain([], [age]).has_discrete_attributes(True))
-        self.assertTrue(Domain([], [race]).has_discrete_attributes(True))
         self.assertFalse(Domain([age], None).has_discrete_attributes(True))
+        self.assertTrue(Domain([], [race]).has_discrete_attributes(True))
+        self.assertFalse(Domain([], [age]).has_discrete_attributes(True))
         self.assertTrue(Domain([race], None).has_discrete_attributes(True))
         self.assertTrue(Domain([age], race).has_discrete_attributes(True))
         self.assertTrue(Domain([race], age).has_discrete_attributes(True))
@@ -374,24 +324,6 @@ class TestDomainInit(unittest.TestCase):
         e = Domain((gender, race), None, metas=(age, gender, ssn))
         f = Domain((gender,), (race, income), metas=(age, income, ssn))
         g = Domain((), metas=(age, gender, ssn))
-
-        d_to_e = e.get_conversion(d)
-        self.assertIs(d_to_e.source, d)
-        self.assertEqual(d_to_e.attributes, [1, -2])
-        self.assertEqual(d_to_e.class_vars, [])
-        self.assertEqual(d_to_e.metas, [0, 1, -1])
-
-        d_to_e = e.get_conversion(d)
-        self.assertIs(d_to_e.source, d)
-        self.assertEqual(d_to_e.attributes, [1, -2])
-        self.assertEqual(d_to_e.class_vars, [])
-        self.assertEqual(d_to_e.metas, [0, 1, -1])
-
-        d_to_f = f.get_conversion(d)
-        self.assertIs(d_to_f.source, d)
-        self.assertEqual(d_to_f.attributes, [1])
-        self.assertEqual(d_to_f.class_vars, [-2, 2])
-        self.assertEqual(d_to_f.metas, [0, 2, -1])
 
         d_to_e = e.get_conversion(d)
         self.assertIs(d_to_e.source, d)
