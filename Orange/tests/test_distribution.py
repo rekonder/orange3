@@ -171,6 +171,7 @@ class Distribution_ContinuousTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         data.table.dataset_dirs.append("Orange/tests")
+        cls.iris = data.Table("iris")
 
     def setUp(self):
         self.freqs = np.array([(1.0, 1), (1.1, 1), (1.2, 2), (1.3, 7), (1.4, 12),
@@ -185,7 +186,7 @@ class Distribution_ContinuousTestCase(unittest.TestCase):
 
 
     def test_from_table(self):
-        d = data.Table("iris")
+        d = self.iris
         petal_length = d.columns.petal_length
 
         for attr in ["petal length", d.domain[2], 2]:
@@ -199,7 +200,7 @@ class Distribution_ContinuousTestCase(unittest.TestCase):
 
 
     def test_construction(self):
-        d = data.Table("iris")
+        d = self.iris
         petal_length = d.columns.petal_length
 
         disc = distribution.Continuous(d, "petal length")
@@ -230,7 +231,7 @@ class Distribution_ContinuousTestCase(unittest.TestCase):
         np.testing.assert_array_equal(disc2, dd)
 
     def test_hash(self):
-        d = data.Table("iris")
+        d = self.iris
         petal_length = d.columns.petal_length
 
         disc = distribution.Continuous(d, "petal length")
@@ -248,7 +249,7 @@ class Distribution_ContinuousTestCase(unittest.TestCase):
 
 
     def test_normalize(self):
-        d = data.Table("iris")
+        d = self.iris
         petal_length = d.columns.petal_length
 
         disc = distribution.Continuous(d, "petal length")
@@ -266,14 +267,14 @@ class Distribution_ContinuousTestCase(unittest.TestCase):
 
 
     def test_modus(self):
-        d = data.Table("iris")
+        d = self.iris
 
         disc = distribution.Continuous([list(range(5)), [1, 1, 2, 5, 1]])
         self.assertEqual(disc.modus(), 3)
 
 
     def test_random(self):
-        d = data.Table("iris")
+        d = self.iris
 
         disc = distribution.Continuous(d, "petal length")
         ans = set()
