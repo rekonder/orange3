@@ -48,7 +48,7 @@ class TestDistMatrix(TestCase):
 
     def test_from_file(self):
         with named_file(
-                """3 axis=0 asymmetric col_labels row_labels
+            """3 axis=0 asymmetric col_labels row_labels
                 ann	bert	chad
                 danny	0.12	3.45	6.78
                 eve	9.01	2.34	5.67
