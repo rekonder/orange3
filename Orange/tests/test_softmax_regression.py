@@ -25,7 +25,6 @@ class SoftmaxRegressionTest(unittest.TestCase):
                     SoftmaxRegressionLearner()]
         results = CrossValidation(table, learners, k=10)
         ca = CA(results)
-        
         self.assertLess(ca[0], ca[1])
 
     def test_probability(self):
