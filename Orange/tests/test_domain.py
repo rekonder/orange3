@@ -163,12 +163,11 @@ class TestDomainInit(unittest.TestCase):
 
     def test_wrong_vartypes(self):
         attributes = (age, gender, income)
-        with self.assertRaises(TypeError):
-            Domain(attributes, ssn)
-        with self.assertRaises(TypeError):
-            Domain(attributes + (ssn,))
-        with self.assertRaises(TypeError):
-            Domain((ssn, ) + attributes)
+        for args in ((attributes, ssn),
+                     (attributes + (ssn,)),
+                     ((ssn, ) + attributes)):
+            with self.assertRaises(TypeError):
+                Domain(*args)
 
     def test_wrong_vartypes_w_source(self):
         d = Domain((age, gender), metas=(ssn,))
@@ -213,31 +212,19 @@ class TestDomainInit(unittest.TestCase):
 
     def test_get_item_error(self):
         d = Domain((age, gender, income), metas=(ssn, race))
-        with self.assertRaises(KeyError):
-            _ = d[3]
-        with self.assertRaises(KeyError):
-            _ = d[-3]
-        with self.assertRaises(KeyError):
-            _ = d[incomeA]
-        with self.assertRaises(KeyError):
-            _ = d["no_such_thing"]
+        for x in (3, -3, incomeA, "no_such_thing"):
+            with self.assertRaises(KeyError):
+                _ = d[x]
+
         with self.assertRaises(TypeError):
             _ = d[[2]]
 
     def test_index_error(self):
         d = Domain((age, gender, income), metas=(ssn, race))
-        with self.assertRaises(ValueError):
-            d.index(3)
-        with self.assertRaises(ValueError):
-            d.index(np.int_(3))
-        with self.assertRaises(ValueError):
-            d.index(-3)
-        with self.assertRaises(ValueError):
-            d.index(np.int_(-3))
-        with self.assertRaises(ValueError):
-            d.index(incomeA)
-        with self.assertRaises(ValueError):
-            d.index("no_such_thing")
+        for x in (3, np.int(3), -3, np.int(-3), incomeA, "no_such_thing"):
+            with self.assertRaises(ValueError):
+                d.index(x)
+
         with self.assertRaises(TypeError):
             d.index([2])
 
@@ -284,7 +271,6 @@ class TestDomainInit(unittest.TestCase):
             self.assertEqual(str(Domain(*args)), printout)
 
     def test_has_discrete(self):
-
         self.assertFalse(Domain([]).has_discrete_attributes())
         self.assertFalse(Domain([], [age]).has_discrete_attributes())
         self.assertFalse(Domain([], race).has_discrete_attributes())
@@ -293,9 +279,9 @@ class TestDomainInit(unittest.TestCase):
         self.assertTrue(Domain([age, race], None).has_discrete_attributes())
         self.assertTrue(Domain([race, age], None).has_discrete_attributes())
 
-        self.assertFalse(Domain([age], None).has_discrete_attributes(True))
         self.assertTrue(Domain([], [race]).has_discrete_attributes(True))
         self.assertFalse(Domain([], [age]).has_discrete_attributes(True))
+        self.assertFalse(Domain([age], None).has_discrete_attributes(True))
         self.assertTrue(Domain([race], None).has_discrete_attributes(True))
         self.assertTrue(Domain([age], race).has_discrete_attributes(True))
         self.assertTrue(Domain([race], age).has_discrete_attributes(True))
@@ -320,37 +306,24 @@ class TestDomainInit(unittest.TestCase):
         self.assertTrue(Domain([], [race, age]).has_continuous_attributes(True))
 
     def test_get_conversion(self):
+        x = lambda: 42
+        new_income = income.copy(compute_value=x)
+
         d = Domain((age, gender, income), metas=(ssn, race))
         e = Domain((gender, race), None, metas=(age, gender, ssn))
         f = Domain((gender,), (race, income), metas=(age, income, ssn))
         g = Domain((), metas=(age, gender, ssn))
-
-        d_to_e = e.get_conversion(d)
-        self.assertIs(d_to_e.source, d)
-        self.assertEqual(d_to_e.attributes, [1, -2])
-        self.assertEqual(d_to_e.class_vars, [])
-        self.assertEqual(d_to_e.metas, [0, 1, -1])
-
-        d_to_f = f.get_conversion(d)
-        self.assertIs(d_to_f.source, d)
-        self.assertEqual(d_to_f.attributes, [1])
-        self.assertEqual(d_to_f.class_vars, [-2, 2])
-        self.assertEqual(d_to_f.metas, [0, 2, -1])
-
-        f_to_g = g.get_conversion(f)
-        self.assertIs(f_to_g.source, f)
-        self.assertEqual(f_to_g.attributes, [])
-        self.assertEqual(f_to_g.class_vars, [])
-        self.assertEqual(f_to_g.metas, [-1, 0, -3])
-
-        x = lambda: 42
-        new_income = income.copy(compute_value=x)
         h = Domain((gender,), (race, new_income), metas=(age, new_income, ssn))
-        g_to_h = h.get_conversion(g)
-        self.assertIs(g_to_h.source, g)
-        self.assertEqual(g_to_h.attributes, [-2])
-        self.assertEqual(g_to_h.class_vars, [None, x])
-        self.assertEqual(g_to_h.metas, [-1, x, -3])
+
+        for conver, domain, attr, variable, metas in ((d, e, [1, -2], [], [0, 1, -1]),
+                                                      (d, f, [1], [-2, 2], [0, 2, -1]),
+                                                      (f, g, [], [], [-1, 0, -3]),
+                                                      (g, h, [-2], [None, x], [-1, x, -3])):
+            to_domain = domain.get_conversion(conver)
+            self.assertIs(to_domain.source, conver)
+            self.assertEqual(to_domain.attributes, attr)
+            self.assertEqual(to_domain.class_vars, variable)
+            self.assertEqual(to_domain.metas, metas)
 
     def test_conversion(self):
         domain = Domain([age, income], [race],
@@ -434,20 +407,19 @@ class TestDomainInit(unittest.TestCase):
         source = Domain(attrs, class_vars, metas)
 
         start = time()
-        c1 = DomainConversion(source, Domain(attrs[:1000], class_vars, metas))
-        self.assertEqual(c1.attributes, list(range(1000)))
-        self.assertEqual(c1.class_vars, list(range(10000, 10010)))
-        self.assertEqual(c1.metas, list(range(-1, -11, -1)))
+        cases = (((attrs[:1000], class_vars, metas),
+                  list(range(1000)), list(range(10000, 10010)), list(range(-1, -11, -1))),
+                 ((metas, attrs[:1000], class_vars),
+                  list(range(-1, -11, -1)), list(range(1000)), list(range(10000, 10010))),
+                 ((class_vars, metas, attrs[:1000]),
+                  list(range(10000, 10010)), list(range(-1, -11, -1)), list(range(1000))))
 
-        c2 = DomainConversion(source, Domain(metas, attrs[:1000], class_vars))
-        self.assertEqual(c2.attributes, list(range(-1, -11, -1)))
-        self.assertEqual(c2.class_vars, list(range(1000)))
-        self.assertEqual(c2.metas, list(range(10000, 10010)))
+        for args, x1, x2, x3 in cases:
+            c1 = DomainConversion(source, Domain(*args))
+            self.assertEqual(c1.attributes, x1)
+            self.assertEqual(c1.class_vars, x2)
+            self.assertEqual(c1.metas, x3)
 
-        c3 = DomainConversion(source, Domain(class_vars, metas, attrs[:1000]))
-        self.assertEqual(c3.attributes, list(range(10000, 10010)))
-        self.assertEqual(c3.class_vars, list(range(-1, -11, -1)))
-        self.assertEqual(c3.metas, list(range(1000)))
         self.assertLessEqual(time() - start, 1)
 
 
