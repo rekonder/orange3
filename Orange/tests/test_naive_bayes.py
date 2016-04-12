@@ -2,36 +2,33 @@ import unittest
 
 import Orange
 from Orange.classification import NaiveBayesLearner
-from  Orange.data import Table
+from Orange.data import Table
+from Orange.evaluation import CrossValidation,CA
 
 class NaiveBayesTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.titanic = Table('titanic')
+        data = Table('titanic')
+        cls.learner = NaiveBayesLearner()
+        cls.learned = cls.learner(data)
+        cls.table = data[::20]
+
     def test_NaiveBayes(self):
-        bayes = NaiveBayesLearner()
-        results = Orange.evaluation.CrossValidation(self.titanic[::20], [bayes], k=10)
-        ca = Orange.evaluation.CA(results)
+        results = CrossValidation(self.table, [self.learner], k=10)
+        ca = CA(results)
         self.assertGreater(ca, 0.7)
         self.assertLess(ca, 0.9)
 
     def test_predict_single_instance(self):
-        bayes = NaiveBayesLearner()
-        c = bayes(self.titanic)
-        for ins in self.titanic[::20]:
-            c(ins)
-            val, prob = c(ins, c.ValueProbs)
+        for ins in self.table:
+            self.learned(ins)
+            val, prob = self.learned(ins, self.learned.ValueProbs)
 
     def test_predict_table(self):
-        bayes = NaiveBayesLearner()
-        c = bayes(self.titanic)
-        table = self.titanic[::20]
-        c(table)
-        vals, probs = c(table, c.ValueProbs)
+        self.learned(self.table)
+        vals, probs = self.learned(self.table, self.learned.ValueProbs)
 
     def test_predict_numpy(self):
-        bayes = NaiveBayesLearner()
-        c = bayes(self.titanic)
-        X = self.titanic.X[::20]
-        c(X)
-        vals, probs = c(X, c.ValueProbs)
+        X = self.table.X[::20]
+        self.learned(X)
+        vals, probs = self.learned(X, self.learned.ValueProbs)
