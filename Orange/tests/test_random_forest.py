@@ -28,13 +28,13 @@ class RandomForestTest(unittest.TestCase):
     def test_predict_single_instance(self):
         for ins in self.iris:
             self.modelClassification(ins)
-            val, prob = self.modelClassification(ins, self.modelClassification.ValueProbs)
+            _, _ = self.modelClassification(ins, self.modelClassification.ValueProbs)
 
     def test_predict(self):
         for data in (self.iris,  # table
                      self.iris.X):  # numpy
             self.modelClassification(data)
-            vals, probs = self.modelClassification(data, self.modelClassification.ValueProbs)
+            _, _ = self.modelClassification(data, self.modelClassification.ValueProbs)
 
     def test_classification_scorer(self):
         scores = self.forestClassification.score_data(self.iris)
