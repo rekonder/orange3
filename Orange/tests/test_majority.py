@@ -22,21 +22,20 @@ class MajorityTest(unittest.TestCase):
 
         x2 = np.random.random_integers(1, 3, (nrows, ncols))
         y2 = clf(x2)
-        self.assertTrue((y2 == 1).all())
+        self.assertEqual(y2.all(), 1)
 
     def test_weights(self):
         nrows = 100
         ncols = 10
         x = np.random.random_integers(1, 3, (nrows, ncols))
         y = np.array(70*[0] + 30*[1]).reshape((nrows, 1))
-        heavy_class = 1
-        w = (y == heavy_class) * 2 + 1
+        w = (y == 1) * 2 + 1
         t = Table(x, y, W=w)
         learn = MajorityLearner()
         clf = learn(t)
 
         y2 = clf(x)
-        self.assertTrue((y2 == heavy_class).all())
+        self.assertEqual(y2.all(), 1)
 
     def test_empty(self):
         learn = MajorityLearner()
@@ -58,7 +57,7 @@ class MajorityTest(unittest.TestCase):
             e.set_class("?")
         clf = learn(iris)
         y = clf(iris)
-        self.assertTrue((y == 1).all())
+        self.assertEqual(y.all(), 1)
 
     def test_continuous(self):
         autompg = Table('auto-mpg')
