@@ -129,35 +129,25 @@ class TestInstance(unittest.TestCase):
         self.assertEqual(inst._y[0], 2)
         self.assertEqual(inst._metas.shape, (0, ))
 
-    def test_init_xym_arr(self):
+    def helper_init_xym_arr(self, vals):
         domain = self.create_domain(["x", DiscreteVariable("g", values="MF")],
                                     [DiscreteVariable("y", values="ABC")],
                                     self.metas)
-        vals = np.array([42, "M", "B", "X", 43, "Foo"], dtype=object)
         inst = Instance(domain, vals)
         self.assertIsInstance(inst, Instance)
         self.assertIs(inst.domain, domain)
-        self.assertEqual(inst._x.shape, (2, ))
-        self.assertEqual(inst._y.shape, (1, ))
-        self.assertEqual(inst._metas.shape, (3, ))
+        self.assertEqual(inst._x.shape, (2,))
+        self.assertEqual(inst._y.shape, (1,))
+        self.assertEqual(inst._metas.shape, (3,))
         assert_array_equal(inst._x, np.array([42, 0]))
         self.assertEqual(inst._y[0], 1)
         assert_array_equal(inst._metas, np.array([0, 43, "Foo"], dtype=object))
 
+    def test_init_xym_arr(self):
+        self.helper_init_xym_arr(np.array([42, "M", "B", "X", 43, "Foo"], dtype=object))
+
     def test_init_xym_list(self):
-        domain = self.create_domain(["x", DiscreteVariable("g", values="MF")],
-                                    [DiscreteVariable("y", values="ABC")],
-                                    self.metas)
-        vals = [42, "M", "B", "X", 43, "Foo"]
-        inst = Instance(domain, vals)
-        self.assertIsInstance(inst, Instance)
-        self.assertIs(inst.domain, domain)
-        self.assertEqual(inst._x.shape, (2, ))
-        self.assertEqual(inst._y.shape, (1, ))
-        self.assertEqual(inst._metas.shape, (3, ))
-        assert_array_equal(inst._x, np.array([42, 0]))
-        self.assertEqual(inst._y[0], 1)
-        assert_array_equal(inst._metas, np.array([0, 43, "Foo"], dtype=object))
+        self.helper_init_xym_arr([42, "M", "B", "X", 43, "Foo"])
 
     def test_init_inst(self):
         domain = self.create_domain(["x", DiscreteVariable("g", values="MF")],
@@ -188,30 +178,15 @@ class TestInstance(unittest.TestCase):
                                     self.metas)
         vals = [42, "M", "B", "X", 43, "Foo"]
         inst = Instance(domain, vals)
-
-        val = inst[0]
-        self.assertIsInstance(val, Value)
-        self.assertEqual(inst[0], 42)
-        self.assertEqual(inst["x"], 42)
-        self.assertEqual(inst[domain[0]], 42)
-
-        val = inst[1]
-        self.assertIsInstance(val, Value)
-        self.assertEqual(inst[1], "M")
-        self.assertEqual(inst["g"], "M")
-        self.assertEqual(inst[domain[1]], "M")
-
-        val = inst[2]
-        self.assertIsInstance(val, Value)
-        self.assertEqual(inst[2], "B")
-        self.assertEqual(inst["y"], "B")
-        self.assertEqual(inst[domain.class_var], "B")
-
-        val = inst[-2]
-        self.assertIsInstance(val, Value)
-        self.assertEqual(inst[-2], 43)
-        self.assertEqual(inst["Meta 2"], 43)
-        self.assertEqual(inst[self.metas[1]], 43)
+        for pos, comp, index, dom in ((0, 42, "x", domain[0]),
+                                      (1, "M", "g", domain[1]),
+                                      (2, "B", "y", domain.class_var),
+                                      (-2, 43, "Meta 2", self.metas[1])):
+            val = inst[pos]
+            self.assertIsInstance(val, Value)
+            self.assertEqual(inst[pos], comp)
+            self.assertEqual(inst[index], comp)
+            self.assertEqual(inst[dom], comp)
 
         with self.assertRaises(ValueError):
             inst["asdf"] = 42
@@ -238,35 +213,23 @@ class TestInstance(unittest.TestCase):
         vals = [42, "M", "B", "X", 43, "Foo"]
         inst = Instance(domain, vals)
 
-        inst[0] = 43
-        self.assertEqual(inst[0], 43)
-        inst["x"] = 44
-        self.assertEqual(inst[0], 44)
-        inst[domain[0]] = 45
-        self.assertEqual(inst[0], 45)
+        for pos, instPos, val in ((0, 0, 42),
+                                  ("x", 0, 44),
+                                  (1, 1, "F"),
+                                  ("g", 1, "M"),
+                                  (2, 2, "C"),
+                                  ("y", 2, "A"),
+                                  (domain.class_var, 2, "B"),
+                                  (-1, -1, "Y"),
+                                  ("Meta 1", -1, "Z"),
+                                  (domain.metas[0], -1, "X")):
+            inst[pos] = val
+            self.assertEqual(inst[instPos], val)
 
-        inst[1] = "F"
-        self.assertEqual(inst[1], "F")
-        inst["g"] = "M"
-        self.assertEqual(inst[1], "M")
         with self.assertRaises(ValueError):
             inst[1] = "N"
         with self.assertRaises(ValueError):
             inst["asdf"] = 42
-
-        inst[2] = "C"
-        self.assertEqual(inst[2], "C")
-        inst["y"] = "A"
-        self.assertEqual(inst[2], "A")
-        inst[domain.class_var] = "B"
-        self.assertEqual(inst[2], "B")
-
-        inst[-1] = "Y"
-        self.assertEqual(inst[-1], "Y")
-        inst["Meta 1"] = "Z"
-        self.assertEqual(inst[-1], "Z")
-        inst[domain.metas[0]] = "X"
-        self.assertEqual(inst[-1], "X")
 
     def test_str(self):
         domain = self.create_domain(["x", DiscreteVariable("g", values="MF")])
@@ -335,21 +298,10 @@ class TestInstance(unittest.TestCase):
         inst2[0] = Unknown
         self.assertNotEqual(inst, inst2)
 
-        inst2 = Instance(domain, vals)
-        inst2[2] = "C"
-        self.assertNotEqual(inst, inst2)
-
-        inst2 = Instance(domain, vals)
-        inst2[-1] = "Y"
-        self.assertNotEqual(inst, inst2)
-
-        inst2 = Instance(domain, vals)
-        inst2[-2] = "33"
-        self.assertNotEqual(inst, inst2)
-
-        inst2 = Instance(domain, vals)
-        inst2[-3] = "Bar"
-        self.assertNotEqual(inst, inst2)
+        for index, val in ((2, "C"), (-1, "Y"), (-2, "33"), (-3, "Bar")):
+            inst2 = Instance(domain, vals)
+            inst2[index] = val
+            self.assertNotEqual(inst, inst2)
 
     def test_instance_id(self):
         domain = self.create_domain(["x"])
