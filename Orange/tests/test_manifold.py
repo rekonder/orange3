@@ -36,22 +36,10 @@ class TestManifold(unittest.TestCase):
         self.assertEqual(eshape, mds_sdist.embedding_.shape)
 
     def test_isomap(self):
-        self.__isomap_test_helper(self.ionosphere, n_com=1)
-        self.__isomap_test_helper(self.ionosphere, n_com=2)
-        self.__isomap_test_helper(self.ionosphere, n_com=3)
+        for i in range(1,4):
+            self.__isomap_test_helper(self.ionosphere, n_com=i)
 
     def __isomap_test_helper(self, data, n_com):
-        isomap_fit = Isomap(n_neighbors=5, n_components=n_com)
-        isomap_fit = isomap_fit(data)
-        eshape = data.X.shape[0], n_com
-        self.assertEqual(eshape, isomap_fit.embedding_.shape)
-
-    def test_lle(self):
-        self.__lle_test_helper(self.ionosphere, n_com=1)
-        self.__lle_test_helper(self.ionosphere, n_com=2)
-        self.__lle_test_helper(self.ionosphere, n_com=3)
-
-    def __lle_test_helper(self, data, n_com):
         isomap_fit = Isomap(n_neighbors=5, n_components=n_com)
         isomap_fit = isomap_fit(data)
         eshape = data.X.shape[0], n_com
