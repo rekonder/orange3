@@ -9,10 +9,11 @@ class SoftmaxRegressionTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.iris = Table('iris')
+        cls.learner = SoftmaxRegressionLearner()
+        cls.clf = cls.learner(cls.iris)
 
     def test_SoftmaxRegression(self):
-        learner = SoftmaxRegressionLearner()
-        results = CrossValidation(self.iris, [learner], k=3)
+        results = CrossValidation(self.iris, [self.learner], k=3)
         ca = CA(results)
         self.assertGreater(ca, 0.9)
         self.assertLess(ca, 1.0)
@@ -22,25 +23,19 @@ class SoftmaxRegressionTest(unittest.TestCase):
         table.X[:, 2] = table.X[:, 2] * 0.001
         table.X[:, 3] = table.X[:, 3] * 0.001
         learners = [SoftmaxRegressionLearner(preprocessors=[]),
-                    SoftmaxRegressionLearner()]
+                    self.learner]
         results = CrossValidation(table, learners, k=10)
         ca = CA(results)
         self.assertLess(ca[0], ca[1])
 
     def test_probability(self):
-        learn = SoftmaxRegressionLearner()
-        clf = learn(self.iris)
-        p = clf(self.iris, ret=Model.Probs)
+        p = self.clf(self.iris, ret=Model.Probs)
         self.assertLess(abs(p.sum(axis=1) - 1).all(), 1e-6)
 
     def test_predict_table(self):
-        learner = SoftmaxRegressionLearner()
-        c = learner(self.iris)
-        c(self.iris)
-        vals, probs = c(self.iris, c.ValueProbs)
+        self.clf(self.iris)
+        vals, probs = self.clf(self.iris, self.clf.ValueProbs)
 
     def test_predict_numpy(self):
-        learner = SoftmaxRegressionLearner()
-        c = learner(self.iris)
-        c(self.iris.X)
-        vals, probs = c(self.iris.X, c.ValueProbs)
+        self.clf(self.iris.X)
+        vals, probs = self.clf(self.iris.X, self.clf.ValueProbs)
