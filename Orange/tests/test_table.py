@@ -11,6 +11,8 @@ import numpy as np
 from Orange import data
 from Orange.data import filter, Variable
 from Orange.data import Unknown
+from warnings import catch_warnings, simplefilter
+from pickle import dumps, loads
 
 
 @np.vectorize
@@ -34,12 +36,11 @@ class TableTestCase(unittest.TestCase):
 
     def test_indexing_class(self):
         d = data.Table("test1")
-        self.assertEqual([e.get_class() for e in d], ["t", "t", "f"])
-        cind = len(d.domain) - 1
-        self.assertEqual([e[cind] for e in d], ["t", "t", "f"])
-        self.assertEqual([e["d"] for e in d], ["t", "t", "f"])
         cvar = d.domain.class_var
-        self.assertEqual([e[cvar] for e in d], ["t", "t", "f"])
+        cind = len(d.domain) - 1
+        self.assertEqual([e.get_class() for e in d], ["t", "t", "f"])
+        for val in (cind, "d", cvar):
+            self.assertEqual([e[val] for e in d], ["t", "t", "f"])
 
     def test_filename(self):
         dir = data.table.get_sample_datasets_dir()
@@ -50,10 +51,8 @@ class TableTestCase(unittest.TestCase):
         self.assertTrue(d.__file__.endswith("test2.tab"))  # platform dependent
 
     def test_indexing(self):
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with catch_warnings():
+            simplefilter("ignore")
             d = data.Table("test2")
 
             for dom, indexOne, indexTwo, comp in (("c", 0, 1, "0"),  #regular, discrete
@@ -74,10 +73,8 @@ class TableTestCase(unittest.TestCase):
                 self.assertEqual(d[np.int_(indexOne)][np.int_(indexTwo)], comp)
 
     def test_indexing_example(self):
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with catch_warnings():
+            simplefilter("ignore")
             d = data.Table("test2")
             e = d[0]
             for dom, pos, comp in (("c", 1, "0"),  # regular, discrete
@@ -94,10 +91,8 @@ class TableTestCase(unittest.TestCase):
 
 
     def test_indexing_assign_value(self):
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with catch_warnings():
+            simplefilter("ignore")
             d = data.Table("test2")
 
             # meta
@@ -120,10 +115,8 @@ class TableTestCase(unittest.TestCase):
                 self.assertEqual(d[0, "b"], 0)
 
     def test_indexing_del_example(self):
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with catch_warnings():
+            simplefilter("ignore")
             d = data.Table("test2")
             initlen = len(d)
 
@@ -176,14 +169,11 @@ class TableTestCase(unittest.TestCase):
             for e, f in zip(s, t):
                 self.assertAlmostEqual(e, f)
 
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with catch_warnings():
+            simplefilter("ignore")
             d = data.Table("test2")
 
             vara = d.domain["a"]
-            metaa = d.domain.index(vara)
 
             self.assertFalse(isnan(d[0, "a"]))
             d[0] = ["3.14", "1", "f"]
@@ -215,32 +205,21 @@ class TableTestCase(unittest.TestCase):
             self.assertEqual(d[0, "e"], "mmmapp")
 
     def test_slice(self):
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with catch_warnings():
+            simplefilter("ignore")
             d = data.Table("test2")
-            x = d[:3]
-            self.assertEqual(len(x), 3)
-            self.assertEqual([e[0] for e in x], [0, 1.1, 2.22])
+            for val, cmp in ((d[:3], [0, 1.1, 2.22]),
+                                    (d[2:5], [2.22, 2.23, 2.24]),
+                                    (d[4:1:-1], [2.24, 2.23, 2.22]),
+                                    (d[-3:], [2.26, 3.333, Unknown])):
 
-            x = d[2:5]
-            self.assertEqual(len(x), 3)
-            self.assertEqual([e[0] for e in x], [2.22, 2.23, 2.24])
-
-            x = d[4:1:-1]
-            self.assertEqual(len(x), 3)
-            self.assertEqual([e[0] for e in x], [2.24, 2.23, 2.22])
-
-            x = d[-3:]
-            self.assertEqual(len(x), 3)
-            self.assertEqual([e[0] for e in x], [2.26, 3.333, Unknown])
+                x = val
+                self.assertEqual(len(x), 3)
+                self.assertEqual([e[0] for e in x], cmp)
 
     def test_assign_slice_value(self):
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with catch_warnings():
+            simplefilter("ignore")
             d = data.Table("test2")
             d[2:5, 0] = 42
             self.assertEqual([e[0] for e in d],
@@ -256,10 +235,8 @@ class TableTestCase(unittest.TestCase):
             self.assertEqual([e["a"] for e in d], list("ABAAACCDE"))
 
     def test_del_slice_example(self):
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with catch_warnings():
+            simplefilter("ignore")
             d = data.Table("test2")
 
             vals = [e[0] for e in d]
@@ -275,10 +252,8 @@ class TableTestCase(unittest.TestCase):
             self.assertEqual(len(d), 0)
 
     def test_set_slice_example(self):
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with catch_warnings():
+            simplefilter("ignore")
             d = data.Table("test2")
             d[5, 0] = 42
             d[:3] = d[5]
@@ -295,10 +270,8 @@ class TableTestCase(unittest.TestCase):
 
 
     def test_multiple_indices(self):
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with catch_warnings():
+            simplefilter("ignore")
             d = data.Table("test2")
 
             with self.assertRaises(IndexError):
@@ -311,10 +284,8 @@ class TableTestCase(unittest.TestCase):
             self.assertEqual([e[0] for e in x], [2.22, 2.25, 1.1])
 
     def test_assign_multiple_indices_value(self):
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with catch_warnings():
+            simplefilter("ignore")
             d = data.Table("test2")
 
             d[1:4, "b"] = 42
@@ -326,10 +297,8 @@ class TableTestCase(unittest.TestCase):
                              [0, 42, 42, None, "?", "", 2.26, 3.333, None])
 
     def test_del_multiple_indices_example(self):
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with catch_warnings():
+            simplefilter("ignore")
             d = data.Table("test2")
 
             vals = [e[0] for e in d]
@@ -345,10 +314,8 @@ class TableTestCase(unittest.TestCase):
             self.assertEqual([e[0] for e in d], vals)
 
     def test_set_multiple_indices_example(self):
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with catch_warnings():
+            simplefilter("ignore")
             d = data.Table("test2")
 
             vals = [e[0] for e in d]
@@ -600,22 +567,16 @@ class TableTestCase(unittest.TestCase):
             self.assertEqual(e[1], e3[0])
 
     def test_pickle(self):
-        import pickle
 
-        d = data.Table("zoo")
-        s = pickle.dumps(d)
-        d2 = pickle.loads(s)
-        self.assertEqual(d[0], d2[0])
+        for name in ("zoo", "iris"):
+            d = data.Table(name)
+            s = dumps(d)
+            d2 = loads(s)
+            self.assertEqual(d[0], d2[0])
 
-        self.assertEqual(d.checksum(include_metas=False),
-                         d2.checksum(include_metas=False))
+            self.assertEqual(d.checksum(include_metas=False),
+                             d2.checksum(include_metas=False))
 
-        d = data.Table("iris")
-        s = pickle.dumps(d)
-        d2 = pickle.loads(s)
-        self.assertEqual(d[0], d2[0])
-        self.assertEqual(d.checksum(include_metas=False),
-                         d2.checksum(include_metas=False))
 
     def test_translate_through_slice(self):
         d = data.Table("iris")
@@ -704,8 +665,6 @@ class TableTestCase(unittest.TestCase):
             os.remove("iris.pickle")
 
     def test_from_numpy(self):
-        import random
-
         a = np.arange(20, dtype="d").reshape((4, 5))
         a[:, -1] = [0, 0, 0, 1]
         dom = data.Domain([data.ContinuousVariable(x) for x in "abcd"],
@@ -856,47 +815,26 @@ class TableTestCase(unittest.TestCase):
         col = d.X[:, 2]
         v = d.columns
 
-        f = filter.FilterContinuous(v.petal_length,
-                                    filter.FilterContinuous.Equal, ref=5.1)
-        x = filter.Values([f])(d)
-        self.assertTrue(np.all(x.X[:, 2] == 5.1))
-        self.assertEqual(sum(col == 5.1), len(x))
+        for f in ((filter.FilterContinuous(v.petal_length, filter.FilterContinuous.Equal, ref=5.1)),
+                  (filter.FilterContinuous(2, filter.FilterContinuous.Equal, ref=5.1)),
+                  (filter.FilterContinuous("petal length", filter.FilterContinuous.Equal, ref=5.1))):
+            x = filter.Values([f])(d)
+            self.assertTrue(np.all(x.X[:, 2] == 5.1))
+            self.assertEqual(sum(col == 5.1), len(x))
 
-        f = filter.FilterContinuous(2,
-                                    filter.FilterContinuous.Equal, ref=5.1)
-        self.assertTrue(np.all(x.X[:, 2] == 5.1))
-        self.assertEqual(sum(col == 5.1), len(x))
+        f = filter.FilterContinuous("sepal length", filter.FilterContinuous.Equal, ref=5.1)
+        for val in (2, v.petal_length):
+            f.column = val
+            x = filter.Values([f])(d)
+            self.assertTrue(np.all(x.X[:, 2] == 5.1))
+            self.assertEqual(sum(col == 5.1), len(x))
 
-        f = filter.FilterContinuous("petal length",
-                                    filter.FilterContinuous.Equal, ref=5.1)
-        self.assertTrue(np.all(x.X[:, 2] == 5.1))
-        self.assertEqual(sum(col == 5.1), len(x))
-
-        f = filter.FilterContinuous("sepal length",
-                                    filter.FilterContinuous.Equal, ref=5.1)
-        f.column = 2
-        self.assertTrue(np.all(x.X[:, 2] == 5.1))
-        self.assertEqual(sum(col == 5.1), len(x))
-
-        f = filter.FilterContinuous("sepal length",
-                                    filter.FilterContinuous.Equal, ref=5.1)
-        f.column = v.petal_length
-        self.assertTrue(np.all(x.X[:, 2] == 5.1))
-        self.assertEqual(sum(col == 5.1), len(x))
-
-        f = filter.FilterContinuous(v.petal_length,
-                                    filter.FilterContinuous.Equal, ref=18)
-        f.ref = 5.1
-        x = filter.Values([f])(d)
-        self.assertTrue(np.all(x.X[:, 2] == 5.1))
-        self.assertEqual(sum(col == 5.1), len(x))
-
-        f = filter.FilterContinuous(v.petal_length,
-                                    filter.FilterContinuous.Equal, ref=18)
-        f.ref = 5.1
-        x = filter.Values([f])(d)
-        self.assertTrue(np.all(x.X[:, 2] == 5.1))
-        self.assertEqual(sum(col == 5.1), len(x))
+        f = filter.FilterContinuous(v.petal_length, filter.FilterContinuous.Equal, ref=18)
+        for val in (5.1, 5.1):
+            f.ref = val
+            x = filter.Values([f])(d)
+            self.assertTrue(np.all(x.X[:, 2] == 5.1))
+            self.assertEqual(sum(col == 5.1), len(x))
 
     def test_valueFilter_discrete(self):
         d = data.Table("zoo")
@@ -1948,15 +1886,13 @@ class TestRowInstance(unittest.TestCase):
         inst = table[2]
         self.assertIsInstance(inst, data.RowInstance)
 
-        inst[1] = 0
-        self.assertEqual(table[2, 1], 0)
-        inst[1] = 1
-        self.assertEqual(table[2, 1], 1)
+        for val in (0, 1):
+            inst[1] = val
+            self.assertEqual(table[2, 1], val)
 
-        inst.set_class("mammal")
-        self.assertEqual(table[2, len(table.domain.attributes)], "mammal")
-        inst.set_class("fish")
-        self.assertEqual(table[2, len(table.domain.attributes)], "fish")
+        for val in ("mammal", "fish"):
+            inst.set_class(val)
+            self.assertEqual(table[2, len(table.domain.attributes)], val)
 
         inst[-1] = "Foo"
         self.assertEqual(table[2, -1], "Foo")
@@ -1970,4 +1906,3 @@ class TestRowInstance(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
