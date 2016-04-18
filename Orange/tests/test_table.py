@@ -1,5 +1,6 @@
 import os
 import unittest
+from _operator import index
 from itertools import chain
 from math import isnan
 import random
@@ -55,62 +56,22 @@ class TableTestCase(unittest.TestCase):
             warnings.simplefilter("ignore")
             d = data.Table("test2")
 
-            # regular, discrete
-            varc = d.domain["c"]
-            self.assertEqual(d[0, 1], "0")
-            self.assertEqual(d[0, varc], "0")
-            self.assertEqual(d[0, "c"], "0")
-            self.assertEqual(d[0][1], "0")
-            self.assertEqual(d[0][varc], "0")
-            self.assertEqual(d[0]["c"], "0")
-            self.assertEqual(d[np.int_(0), np.int_(1)], "0")
-            self.assertEqual(d[np.int_(0)][np.int_(1)], "0")
-
-            # regular, continuous
-            varb = d.domain["b"]
-            self.assertEqual(d[0, 0], 0)
-            self.assertEqual(d[0, varb], 0)
-            self.assertEqual(d[0, "b"], 0)
-            self.assertEqual(d[0][0], 0)
-            self.assertEqual(d[0][varb], 0)
-            self.assertEqual(d[0]["b"], 0)
-            self.assertEqual(d[np.int_(0), np.int_(0)], 0)
-            self.assertEqual(d[np.int_(0)][np.int_(0)], 0)
-
-            # negative
-            varb = d.domain["b"]
-            self.assertEqual(d[-2, 0], 3.333)
-            self.assertEqual(d[-2, varb], 3.333)
-            self.assertEqual(d[-2, "b"], 3.333)
-            self.assertEqual(d[-2][0], 3.333)
-            self.assertEqual(d[-2][varb], 3.333)
-            self.assertEqual(d[-2]["b"], 3.333)
-            self.assertEqual(d[np.int_(-2), np.int_(0)], 3.333)
-            self.assertEqual(d[np.int_(-2)][np.int_(0)], 3.333)
-
-            # meta, discrete
-            vara = d.domain["a"]
-            metaa = d.domain.index("a")
-            self.assertEqual(d[0, metaa], "A")
-            self.assertEqual(d[0, vara], "A")
-            self.assertEqual(d[0, "a"], "A")
-            self.assertEqual(d[0][metaa], "A")
-            self.assertEqual(d[0][vara], "A")
-            self.assertEqual(d[0]["a"], "A")
-            self.assertEqual(d[np.int_(0), np.int_(metaa)], "A")
-            self.assertEqual(d[np.int_(0)][np.int_(metaa)], "A")
-
-            # meta, string
-            vare = d.domain["e"]
-            metae = d.domain.index("e")
-            self.assertEqual(d[0, metae], "i")
-            self.assertEqual(d[0, vare], "i")
-            self.assertEqual(d[0, "e"], "i")
-            self.assertEqual(d[0][metae], "i")
-            self.assertEqual(d[0][vare], "i")
-            self.assertEqual(d[0]["e"], "i")
-            self.assertEqual(d[np.int_(0), np.int_(metae)], "i")
-            self.assertEqual(d[np.int_(0)][np.int_(metae)], "i")
+            for dom, indexOne, indexTwo, comp in (("c", 0, 1, "0"),  #regular, discrete
+                                                  ("b", 0, 0, 0),  # regular, continuous
+                                                  ("b", -2, 0, 3.333),  # negative
+                                                  ("a", 0, 0, "A"),  # meta, discrete
+                                                  ("e", 0, 0, "i")):  # meta, string
+                if dom == "a" or dom == "e":
+                    indexTwo = d.domain.index(dom)
+                varc = d.domain[dom]
+                self.assertEqual(d[indexOne, indexTwo], comp)
+                self.assertEqual(d[indexOne, varc], comp)
+                self.assertEqual(d[indexOne, dom], comp)
+                self.assertEqual(d[indexOne][indexTwo], comp)
+                self.assertEqual(d[indexOne][varc], comp)
+                self.assertEqual(d[indexOne][dom], comp)
+                self.assertEqual(d[np.int_(indexOne), np.int_(indexTwo)], comp)
+                self.assertEqual(d[np.int_(indexOne)][np.int_(indexTwo)], comp)
 
     def test_indexing_example(self):
         import warnings
@@ -119,36 +80,18 @@ class TableTestCase(unittest.TestCase):
             warnings.simplefilter("ignore")
             d = data.Table("test2")
             e = d[0]
+            for dom, pos, comp in (("c", 1, "0"),  # regular, discrete
+                                     ("b", 0, 0),  # regular, continuous
+                                     ("a", 0, "A"),  # meta, discrete
+                                     ("e", 0, "i")):  # meta, string
+                if dom == "a" or dom == "e":
+                    pos = d.domain.index(dom)
+                varc = d.domain[dom]
+                self.assertEqual(e[pos], comp)
+                self.assertEqual(e[varc], comp)
+                self.assertEqual(e[dom], comp)
+                self.assertEqual(e[np.int_(pos)], comp)
 
-            # regular, discrete
-            varc = d.domain["c"]
-            self.assertEqual(e[1], "0")
-            self.assertEqual(e[varc], "0")
-            self.assertEqual(e["c"], "0")
-            self.assertEqual(e[np.int_(1)], "0")
-
-            # regular, continuous
-            varb = d.domain["b"]
-            self.assertEqual(e[0], 0)
-            self.assertEqual(e[varb], 0)
-            self.assertEqual(e["b"], 0)
-            self.assertEqual(e[np.int_(0)], 0)
-
-            # meta, discrete
-            vara = d.domain["a"]
-            metaa = d.domain.index("a")
-            self.assertEqual(e[metaa], "A")
-            self.assertEqual(e[vara], "A")
-            self.assertEqual(e["a"], "A")
-            self.assertEqual(e[np.int_(metaa)], "A")
-
-            # meta, string
-            vare = d.domain["e"]
-            metae = d.domain.index("e")
-            self.assertEqual(e[metae], "i")
-            self.assertEqual(e[vare], "i")
-            self.assertEqual(e["e"], "i")
-            self.assertEqual(e[np.int_(metae)], "i")
 
     def test_indexing_assign_value(self):
         import warnings
@@ -160,51 +103,21 @@ class TableTestCase(unittest.TestCase):
             # meta
             vara = d.domain["a"]
             metaa = d.domain.index("a")
-
-            self.assertEqual(d[0, "a"], "A")
-            d[0, "a"] = "B"
-            self.assertEqual(d[0, "a"], "B")
-            d[0]["a"] = "A"
-            self.assertEqual(d[0, "a"], "A")
-
-            d[0, vara] = "B"
-            self.assertEqual(d[0, "a"], "B")
-            d[0][vara] = "A"
-            self.assertEqual(d[0, "a"], "A")
-
-            d[0, metaa] = "B"
-            self.assertEqual(d[0, "a"], "B")
-            d[0][metaa] = "A"
-            self.assertEqual(d[0, "a"], "A")
-
-            d[0, np.int_(metaa)] = "B"
-            self.assertEqual(d[0, "a"], "B")
-            d[0][np.int_(metaa)] = "A"
-            self.assertEqual(d[0, "a"], "A")
+            for pos in ("a", vara, metaa, np.int_(metaa)):
+                self.assertEqual(d[0, "a"], "A")
+                d[0, pos] = "B"
+                self.assertEqual(d[0, "a"], "B")
+                d[0][pos] = "A"
+                self.assertEqual(d[0, "a"], "A")
 
             # regular
             varb = d.domain["b"]
-
-            self.assertEqual(d[0, "b"], 0)
-            d[0, "b"] = 42
-            self.assertEqual(d[0, "b"], 42)
-            d[0]["b"] = 0
-            self.assertEqual(d[0, "b"], 0)
-
-            d[0, varb] = 42
-            self.assertEqual(d[0, "b"], 42)
-            d[0][varb] = 0
-            self.assertEqual(d[0, "b"], 0)
-
-            d[0, 0] = 42
-            self.assertEqual(d[0, "b"], 42)
-            d[0][0] = 0
-            self.assertEqual(d[0, "b"], 0)
-
-            d[0, np.int_(0)] = 42
-            self.assertEqual(d[0, "b"], 42)
-            d[0][np.int_(0)] = 0
-            self.assertEqual(d[0, "b"], 0)
+            for pos in ("b", varb, 0, np.int_(0)):
+                self.assertEqual(d[0, "b"], 0)
+                d[0, pos] = 42
+                self.assertEqual(d[0, "b"], 42)
+                d[0][pos] = 0
+                self.assertEqual(d[0, "b"], 0)
 
     def test_indexing_del_example(self):
         import warnings
