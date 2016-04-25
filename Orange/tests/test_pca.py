@@ -84,20 +84,15 @@ class TestPCA(unittest.TestCase):
         iris = self.iris
         pca = PCA(n_components=2)(iris)
         pca_iris = pca(iris)
-        pca_iris2 = Table(pca_iris.domain, iris)
-        np.testing.assert_almost_equal(pca_iris.X, pca_iris2.X)
-        np.testing.assert_equal(pca_iris.Y, pca_iris2.Y)
-
-        pca_iris3 = pickle.loads(pickle.dumps(pca_iris))
-        np.testing.assert_almost_equal(pca_iris.X, pca_iris3.X)
-        np.testing.assert_equal(pca_iris.Y, pca_iris3.Y)
+        for pca_irisCom in (Table(pca_iris.domain, iris),
+                            pickle.loads(pickle.dumps(pca_iris))):
+            np.testing.assert_almost_equal(pca_iris.X, pca_irisCom.X)
+            np.testing.assert_equal(pca_iris.Y, pca_irisCom.Y)
 
     def test_transformed_domain_does_not_pickle_data(self):
         iris = self.iris
         pca = PCA(n_components=2)(iris)
         pca_iris = pca(iris)
-        pca_iris2 = Table(pca_iris.domain, iris)
-
         pca_iris2 = pickle.loads(pickle.dumps(pca_iris))
         self.assertIsNone(pca_iris2.domain[0].compute_value.transformed)
 
