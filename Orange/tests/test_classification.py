@@ -150,33 +150,23 @@ class ExpandProbabilitiesTest(unittest.TestCase):
         self.domain = Domain(attr_vars, class_vars, meta_vars)
         self.x = np.random.random_integers(0, 1, (rows, attr))
 
-    def test_single_class(self):
+    def test_class(self):
         rows = 10
         attr = 3
-        vars = 1
         class_var_domain = 20
-        self.prepareTable(rows, attr, vars, class_var_domain)
-        y = np.random.random_integers(2, 5, (rows, vars)) * 2
-        t = Table(self.domain, self.x, y)
-        learn = DummyLearner()
-        clf = learn(t)
-        z, p = clf(self.x, ret=Model.ValueProbs)
-        self.assertEqual(p.shape, (rows, class_var_domain))
-        self.assertTrue(np.all(z == np.argmax(p, axis=-1)))
-
-    def test_multi_class(self):
-        rows = 10
-        attr = 3
-        vars = 5
-        class_var_domain = 20
-        self.prepareTable(rows, attr, vars, class_var_domain)
-        y = np.random.random_integers(2, 5, (rows, vars)) * 2
-        t = Table(self.domain, self.x, y)
-        learn = DummyMulticlassLearner()
-        clf = learn(t)
-        z, p = clf(self.x, ret=Model.ValueProbs)
-        self.assertEqual(p.shape, (rows, vars, class_var_domain))
-        self.assertTrue(np.all(z == np.argmax(p, axis=-1)))
+        for learner, varsValue in ((DummyLearner(), 1), (DummyMulticlassLearner(), 5)):
+            vars = varsValue
+            self.prepareTable(rows, attr, vars, class_var_domain)
+            y = np.random.random_integers(2, 5, (rows, vars)) * 2
+            t = Table(self.domain, self.x, y)
+            learn = learner
+            clf = learn(t)
+            z, p = clf(self.x, ret=Model.ValueProbs)
+            if vars == 1:
+                self.assertEqual(p.shape, (rows, class_var_domain))
+            else:
+                self.assertEqual(p.shape, (rows, vars, class_var_domain))
+            self.assertTrue(np.all(z == np.argmax(p, axis=-1)))
 
 
 class SklTest(unittest.TestCase):
@@ -296,7 +286,6 @@ class LearnerAccessibility(unittest.TestCase):
                 np.testing.assert_almost_equal(Table(model.domain, ds).X, Table(model2.domain, ds).X)
                 np.testing.assert_almost_equal(model(ds), model2(ds),
                                                err_msg='%s does not return same values when unpickled %s' % (learner.__class__.__name__, ds.name))
-                #print('%s on %s works' % (learner, ds.name))
 
     def test_adequacy_all_learners(self):
         for learner in self.all_learners():
