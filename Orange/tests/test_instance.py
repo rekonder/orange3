@@ -79,24 +79,16 @@ class TestInstance(unittest.TestCase):
                                         dtype=object))
 
     def test_init_x_arr(self):
-        domain = self.create_domain(["x", DiscreteVariable("g", values="MF")])
-        vals = np.array([42, 0])
-        inst = Instance(domain, vals)
-        assert_array_equal(inst._x, vals)
-        self.assertEqual(inst._y.shape, (0, ))
-        self.assertEqual(inst._metas.shape, (0, ))
-
-        domain = self.create_domain()
-        inst = Instance(domain, np.empty((0,)))
-        self.assertEqual(inst._x.shape, (0, ))
-        self.assertEqual(inst._y.shape, (0, ))
-        self.assertEqual(inst._metas.shape, (0, ))
-
+        for domain, vals in ((self.create_domain(["x", DiscreteVariable("g", values="MF")]), np.array([42, 0])),
+                              (self.create_domain(), np.empty((0,)))):
+            inst = Instance(domain, vals)
+            assert_array_equal(inst._x, vals)
+            self.assertEqual(inst._y.shape, (0, ))
+            self.assertEqual(inst._metas.shape, (0, ))
 
     def test_init_x_list(self):
         domain = self.create_domain(["x", DiscreteVariable("g", values="MF")])
-        lst = [42, 0]
-        vals = np.array(lst)
+        vals = np.array([42, 0])
         inst = Instance(domain, vals)
         assert_array_equal(inst._x, vals)
         self.assertEqual(inst._y.shape, (0, ))
@@ -108,26 +100,17 @@ class TestInstance(unittest.TestCase):
         self.assertEqual(inst._y.shape, (0, ))
         self.assertEqual(inst._metas.shape, (0, ))
 
-    def test_init_xy_arr(self):
-        domain = self.create_domain(["x", DiscreteVariable("g", values="MF")],
-                                    [DiscreteVariable("y", values="ABC")])
-        vals = np.array([42, 0, 1])
-        inst = Instance(domain, vals)
-        assert_array_equal(inst._x, vals[:2])
-        self.assertEqual(inst._y.shape, (1, ))
-        self.assertEqual(inst._y[0], 1)
-        self.assertEqual(inst._metas.shape, (0, ))
-
-    def test_init_xy_list(self):
-        domain = self.create_domain(["x", DiscreteVariable("g", values="MF")],
-                                    [DiscreteVariable("y", values="ABC")])
-        lst = [42, "M", "C"]
-        vals = np.array([42, 0, 2])
-        inst = Instance(domain, vals)
-        assert_array_equal(inst._x, vals[:2])
-        self.assertEqual(inst._y.shape, (1, ))
-        self.assertEqual(inst._y[0], 2)
-        self.assertEqual(inst._metas.shape, (0, ))
+    def test_init_xy(self):
+        for value in range(1,3):
+            print(value)
+            domain = self.create_domain(["x", DiscreteVariable("g", values="MF")],
+                                        [DiscreteVariable("y", values="ABC")])
+            vals = np.array([42, 0, value])
+            inst = Instance(domain, vals)
+            assert_array_equal(inst._x, vals[:2])
+            self.assertEqual(inst._y.shape, (1, ))
+            self.assertEqual(inst._y[0], value)
+            self.assertEqual(inst._metas.shape, (0, ))
 
     def helper_init_xym_arr(self, vals):
         domain = self.create_domain(["x", DiscreteVariable("g", values="MF")],
