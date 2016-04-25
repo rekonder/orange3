@@ -11,10 +11,10 @@ class LogisticRegressionTest(unittest.TestCase):
     def setUpClass(cls):
         cls.iris = Table('iris')
         cls.voting = Table('voting')
+        cls.logistic = LogisticRegressionLearner()
 
     def test_LogisticRegression(self):
-        learn = LogisticRegressionLearner()
-        results = CrossValidation(self.voting, [learn], k=2)
+        results = CrossValidation(self.voting, [self.logistic], k=2)
         ca = CA(results)
         self.assertGreater(ca, 0.8)
         self.assertLess(ca, 1.0)
@@ -56,14 +56,12 @@ class LogisticRegressionTest(unittest.TestCase):
         self.assertLess(abs(p.sum(axis=1) - 1).all(), 1e-6)
 
     def test_learner_scorer(self):
-        learner = LogisticRegressionLearner()
-        scores = learner.score_data(self.voting)
+        scores = self.logistic.score_data(self.voting)
         self.assertEqual('physician-fee-freeze',
                          self.voting.domain.attributes[np.argmax(scores)].name)
         self.assertEqual(len(scores), len(self.voting.domain.attributes))
 
     def test_coefficients(self):
-        learn = LogisticRegressionLearner()
-        model = learn(self.voting)
+        model = self.logistic(self.voting)
         coef = model.coefficients
         self.assertEqual(len(coef[0]), len(model.domain.attributes))
