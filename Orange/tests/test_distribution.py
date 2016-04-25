@@ -26,21 +26,12 @@ class Distribution_DiscreteTestCase(unittest.TestCase):
         self.assertEqual(disc.unknowns, 0)
         np.testing.assert_array_equal(disc, self.freqs)
 
-        disc2 = distribution.Discrete(d, d.domain.class_var)
-        self.assertIsInstance(disc2, np.ndarray)
-        self.assertIs(disc2.variable, d.domain.class_var)
-        self.assertEqual(disc, disc2)
-
-        disc3 = distribution.Discrete(d, len(d.domain.attributes))
-        self.assertIsInstance(disc3, np.ndarray)
-        self.assertIs(disc3.variable, d.domain.class_var)
-        self.assertEqual(disc, disc3)
-
-        disc5 = distribution.class_distribution(d)
-        self.assertIsInstance(disc5, np.ndarray)
-        self.assertIs(disc5.variable, d.domain.class_var)
-        self.assertEqual(disc, disc5)
-
+        for discComp in (distribution.Discrete(d, d.domain.class_var),
+                         distribution.Discrete(d, len(d.domain.attributes)),
+                         distribution.class_distribution(d)):
+            self.assertIsInstance(discComp, np.ndarray)
+            self.assertIs(discComp.variable, d.domain.class_var)
+            self.assertEqual(disc, discComp)
 
     def test_construction(self):
         d = data.Table("zoo")
@@ -141,8 +132,6 @@ class Distribution_DiscreteTestCase(unittest.TestCase):
     def test_normalize(self):
         d = data.Table("zoo")
         disc = distribution.Discrete(d, "type")
-        disc.normalize()
-        self.assertEqual(disc, self.rfreqs)
         disc.normalize()
         self.assertEqual(disc, self.rfreqs)
 
