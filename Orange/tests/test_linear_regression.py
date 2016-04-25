@@ -15,6 +15,16 @@ class LinearRegressionTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.housing = Table("housing")
+        cls.linear = LinearRegressionLearner()
+        cls.ridge = RidgeRegressionLearner()
+        cls.lasso = LassoRegressionLearner()
+        cls.elastic = ElasticNetLearner()
+        cls.elasticCV = ElasticNetCVLearner()
+        cls.mean = MeanLearner()
+        cls.learners = [cls.linear,
+                        cls.ridge,
+                        LassoRegressionLearner(alpha=0.01),
+                        ElasticNetLearner(alpha=0.01)]
 
     def test_LinearRegression(self):
         nrows = 1000
@@ -27,47 +37,32 @@ class LinearRegressionTest(unittest.TestCase):
         x1, x2 = np.split(x, 2)
         y1, y2 = np.split(y, 2)
         t = Table(x1, y1)
-        learn = LinearRegressionLearner()
-        clf = learn(t)
+        clf = self.linear(t)
         z = clf(x2)
         self.assertTrue((abs(z.reshape(-1, 1) - y2) < 2.0).all())
 
     def test_Regression(self):
-        ridge = RidgeRegressionLearner()
-        lasso = LassoRegressionLearner()
-        elastic = ElasticNetLearner()
-        elasticCV = ElasticNetCVLearner()
-        mean = MeanLearner()
-        learners = [ridge, lasso, elastic, elasticCV, mean]
+        learners = [self.ridge, self.lasso, self.elastic, self.elasticCV, self.mean]
         res = CrossValidation(self.housing, learners, k=2)
         rmse = RMSE(res)
         for i in range(len(learners) - 1):
             self.assertLess(rmse[i], rmse[-1])
 
     def test_linear_scorer(self):
-        learner = LinearRegressionLearner()
-        scores = learner.score_data(self.housing)
+        scores = self.linear.score_data(self.housing)
         self.assertEqual('LSTAT',
                          self.housing.domain.attributes[np.argmax(scores)].name)
         self.assertEqual(len(scores), len(self.housing.domain.attributes))
 
     def test_scorer(self):
-        learners = [LinearRegressionLearner(),
-                    RidgeRegressionLearner(),
-                    LassoRegressionLearner(alpha=0.01),
-                    ElasticNetLearner(alpha=0.01)]
-        for learner in learners:
+        for learner in self.learners:
             scores = learner.score_data(self.housing)
             self.assertEqual('LSTAT',
                              self.housing.domain.attributes[np.argmax(scores)].name)
             self.assertEqual(len(scores), len(self.housing.domain.attributes))
 
     def test_scorer_feature(self):
-        learners = [LinearRegressionLearner(),
-                    RidgeRegressionLearner(),
-                    LassoRegressionLearner(alpha=0.01),
-                    ElasticNetLearner(alpha=0.01)]
-        for learner in learners:
+        for learner in self.learners:
             scores = learner.score_data(self.housing)
             for i, attr in enumerate(self.housing.domain.attributes):
                 score = learner.score_data(self.housing, attr)
@@ -75,7 +70,7 @@ class LinearRegressionTest(unittest.TestCase):
 
     def test_coefficients(self):
         data = Table([[11], [12], [13]], [0, 1, 2])
-        model = LinearRegressionLearner()(data)
+        model = self.linear(data)
         self.assertAlmostEqual(float(model.intercept), -11)
         self.assertEqual(len(model.coefficients), 1)
         self.assertAlmostEqual(float(model.coefficients[0]), 1)
