@@ -14,7 +14,7 @@ class TestTabReader(unittest.TestCase):
         DiscreteVariable._clear_cache()
 
     def test_read_easy(self):
-        simplefile = """\
+        sample_file = """\
         Feature 1\tFeature 2\tClass 1\tClass 42
         d        \tM F      \td      \td
                  \t         \tclass  \tclass
@@ -23,32 +23,21 @@ class TestTabReader(unittest.TestCase):
         2.0      \tM        \t4      \t
         """
 
-        file = io.StringIO(simplefile)
+        file = io.StringIO(sample_file)
         table = TabFormat().read_file(file)
 
         f1, f2, c1, c2 = table.domain
-        self.assertIsInstance(f1, DiscreteVariable)
-        self.assertEqual(f1.name, "Feature 1")
-        self.assertIsInstance(f2, DiscreteVariable)
-        self.assertEqual(f2.name, "Feature 2")
-        self.assertIsInstance(c1, DiscreteVariable)
-        self.assertEqual(c1.name, "Class 1")
-        self.assertIsInstance(c2, DiscreteVariable)
-        self.assertEqual(c2.name, "Class 42")
+        for indices, value in ((f1, "Feature 1"),
+                               (f2, "Feature 2"),
+                               (c1, "Class 1"),
+                               (c2, "Class 42")):
+            self.assertIsInstance(indices, DiscreteVariable)
+            self.assertEqual(indices.name, value)
 
         np.testing.assert_almost_equal(table.X, np.array([[0, 0], [np.nan, 1], [1, 0]]))
         np.testing.assert_almost_equal(table.Y, np.array([[1, 1], [2, 0], [0, np.nan]]))
 
-    def test_read_and_save_attributes(self):
-        samplefile = """\
-        Feature 1\tFeature 2\tClass 1\tClass 42
-        d        \tM F      \td      \td
-                 \ta=1 b=2 \tclass x=a\\ longer\\ string \tclass
-        1.0      \tM        \t5      \trich
-        """
-        file = io.StringIO(samplefile)
-        table = TabFormat().read_file(file)
-
+    def read_and_save_attributes_helper(self, table):
         f1, f2, c1, c2 = table.domain.variables
         self.assertIsInstance(f2, DiscreteVariable)
         self.assertEqual(f2.name, "Feature 2")
@@ -57,6 +46,17 @@ class TestTabReader(unittest.TestCase):
         self.assertIsInstance(c1, DiscreteVariable)
         self.assertEqual(c1.name, "Class 1")
         self.assertEqual(c1.attributes, {'x': 'a longer string'})
+
+    def test_read_and_save_attributes(self):
+        sample_file = """\
+        Feature 1\tFeature 2\tClass 1\tClass 42
+        d        \tM F      \td      \td
+                 \ta=1 b=2 \tclass x=a\\ longer\\ string \tclass
+        1.0      \tM        \t5      \trich
+        """
+        file = io.StringIO(sample_file)
+        table = TabFormat().read_file(file)
+        self.read_and_save_attributes_helper(table)
         outf = io.StringIO()
         outf.close = lambda: None
         TabFormat.write_file(outf, table)
@@ -64,54 +64,40 @@ class TestTabReader(unittest.TestCase):
 
         file = io.StringIO(saved)
         table = TabFormat().read_file(file)
+        self.read_and_save_attributes_helper(table)
 
-        f1, f2, c1, c2 = table.domain.variables
-        self.assertIsInstance(f2, DiscreteVariable)
-        self.assertEqual(f2.name, "Feature 2")
-        self.assertEqual(f2.attributes, {'a': 1, 'b': 2})
-        self.assertIn(c1, table.domain.class_vars)
-        self.assertIsInstance(c1, DiscreteVariable)
-        self.assertEqual(c1.name, "Class 1")
-        self.assertEqual(c1.attributes, {'x': 'a longer string'})
-
-    def test_read_data_oneline_header(self):
-        samplefile = """\
-        data1\tdata2\tdata3
-        0.1\t0.2\t0.3
-        1.1\t1.2\t1.5
-        """
-        file = io.StringIO(samplefile)
-        table = TabFormat().read_file(file)
-
-        self.assertEqual(len(table), 2)
-        self.assertEqual(len(table.domain), 3)
-        self.assertEqual(table.domain[0].name, 'data1')
-
-    def test_read_data_no_header(self):
-        samplefile = """\
-        0.1\t0.2\t0.3
-        1.1\t1.2\t1.5
-        """
+    def read_data_header_helper(self, samplefile, realName):
         file = io.StringIO(samplefile)
         table = TabFormat().read_file(file)
 
         self.assertEqual(len(table), 2)
         self.assertEqual(len(table.domain), 3)
         self.assertTrue(table.domain[0].is_continuous)
-        self.assertEqual(table.domain[0].name, 'Feature 1')
+        self.assertEqual(table.domain[0].name, realName)
+
+    def test_read_data_oneline_header(self):
+        sample_file = """\
+        data1\tdata2\tdata3
+        0.1\t0.2\t0.3
+        1.1\t1.2\t1.5
+        """
+        self.read_data_header_helper(sample_file, 'data1')
+
+    def test_read_data_no_header(self):
+        sample_file = """\
+        0.1\t0.2\t0.3
+        1.1\t1.2\t1.5
+        """
+        self.read_data_header_helper(sample_file, 'Feature 1')
 
     def test_reuse_variables(self):
-        file1 = io.StringIO("\n".join("xd dbac"))
-        t1 = TabFormat().read_file(file1)
+        for joinValue, domainValue, ravelValue in (("xd dbac", 'abcd', [3, 1, 0, 2]),
+                                                   ("xd hgacb", 'abcdgh', [5, 4, 0, 2, 1])):
+            file1 = io.StringIO("\n".join(joinValue))
+            t1 = TabFormat().read_file(file1)
 
-        self.assertSequenceEqual(t1.domain['x'].values, 'abcd')
-        np.testing.assert_almost_equal(t1.X.ravel(), [3, 1, 0, 2])
-
-        file2 = io.StringIO("\n".join("xd hgacb"))
-        t2 = TabFormat().read_file(file2)
-
-        self.assertSequenceEqual(t2.domain['x'].values, 'abcdgh')
-        np.testing.assert_almost_equal(t2.X.ravel(), [5, 4, 0, 2, 1])
+            self.assertSequenceEqual(t1.domain['x'].values, domainValue)
+            np.testing.assert_almost_equal(t1.X.ravel(), ravelValue)
 
     def test_dataset_with_weird_names_and_column_attributes(self):
         data = Table(path.join(path.dirname(__file__), 'weird.tab'))
