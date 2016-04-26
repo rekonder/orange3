@@ -3,10 +3,9 @@ import pickle
 
 import numpy as np
 
-import Orange
 from Orange.classification import SimpleTreeLearner as SimpleTreeCls
 from Orange.regression import SimpleTreeLearner as SimpleTreeReg
-from Orange.data import ContinuousVariable, Domain, DiscreteVariable, Table
+from Orange.data import ContinuousVariable, Domain, DiscreteVariable, Table, Variable
 
 
 class SimpleTreeTest(unittest.TestCase):
@@ -26,20 +25,20 @@ class SimpleTreeTest(unittest.TestCase):
         y_cls[np.random.random(self.N) < 0.1] = np.nan
         y_reg[np.random.random(self.N) < 0.1] = np.nan
 
-        di = [Orange.data.domain.DiscreteVariable(
+        di = [DiscreteVariable(
             'd{}'.format(i), [0, 1]) for i in range(self.Mi)]
-        df = [Orange.data.domain.ContinuousVariable(
+        df = [ContinuousVariable(
             'c{}'.format(i)) for i in range(self.Mf)]
-        dcls = Orange.data.domain.DiscreteVariable('yc', [0, 1, 2])
-        dreg = Orange.data.domain.ContinuousVariable('yr')
-        domain_cls = Orange.data.domain.Domain(di + df, dcls)
-        domain_reg = Orange.data.domain.Domain(di + df, dreg)
+        dcls = DiscreteVariable('yc', [0, 1, 2])
+        dreg = ContinuousVariable('yr')
+        domain_cls = Domain(di + df, dcls)
+        domain_reg = Domain(di + df, dreg)
 
-        self.data_cls = Orange.data.Table.from_numpy(domain_cls, X, y_cls)
-        self.data_reg = Orange.data.Table.from_numpy(domain_reg, X, y_reg)
+        self.data_cls = Table.from_numpy(domain_cls, X, y_cls)
+        self.data_reg = Table.from_numpy(domain_reg, X, y_reg)
 
     def test_SimpleTree_classification(self):
-        Orange.data.Variable._clear_all_caches()
+        Variable._clear_all_caches()
         lrn = SimpleTreeCls()
         clf = lrn(self.data_cls)
         p = clf(self.data_cls, clf.Probs)
@@ -80,7 +79,7 @@ class SimpleTreeTest(unittest.TestCase):
             '{ 0 2 { 1 4 0.13895 { 1 4 -0.32607 { 2 4.60993 1.71141 } { 2 4.96454 3.56122 } } { 2 7.09220 -4.32343 } } { 1 4 -0.35941 { 0 0 { 1 5 -0.20027 { 2 3.54255 0.95095 } { 2 5.50000 -5.56049 } } { 2 7.62411 2.03615 } } { 1 5 0.40797 { 1 3 0.83459 { 2 3.71094 0.27028 } { 2 5.18490 3.70920 } } { 2 5.77083 5.93398 } } } }')
 
     def test_SimpleTree_single_instance(self):
-        data = Orange.data.Table('iris')
+        data = Table('iris')
         lrn = SimpleTreeCls()
         clf = lrn(data)
         for ins in data[::20]:
