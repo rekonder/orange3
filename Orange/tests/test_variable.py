@@ -54,24 +54,13 @@ class BaseVariableTest(unittest.TestCase):
         self.assertRaises(RuntimeError, self.var.repr_val, None)
 
     def test_properties(self):
-        a = ContinuousVariable()
-        self.assertTrue(a.is_continuous)
-        self.assertFalse(a.is_discrete)
-        self.assertFalse(a.is_string)
-        self.assertTrue(a.is_primitive())
-
-        a = DiscreteVariable()
-        self.assertFalse(a.is_continuous)
-        self.assertTrue(a.is_discrete)
-        self.assertFalse(a.is_string)
-        self.assertTrue(a.is_primitive())
-
-        a = StringVariable()
-        self.assertFalse(a.is_continuous)
-        self.assertFalse(a.is_discrete)
-        self.assertTrue(a.is_string)
-        self.assertFalse(a.is_primitive())
-
+        for a, isContinuous, isDiscrete, isString, isPrimitive in ((ContinuousVariable(), True, False, False, True),
+                                                                   (DiscreteVariable(), False, True, False, True),
+                                                                   (StringVariable(), False, False, True, False)):
+            self.assertEqual(a.is_continuous, isContinuous)
+            self.assertEqual(a.is_discrete, isDiscrete)
+            self.assertEqual(a.is_string, isString)
+            self.assertEqual(a.is_primitive(), isPrimitive)
 
     def test_strange_eq(self):
         a = ContinuousVariable()
@@ -79,6 +68,7 @@ class BaseVariableTest(unittest.TestCase):
         self.assertEqual(a, a)
         self.assertNotEqual(a, b)
         self.assertNotEqual(a, "somestring")
+
 
 def variabletest(varcls):
     def decorate(cls):
@@ -329,8 +319,6 @@ time,continuous
         CSVReader.write_file(output_csv, table)
         self.assertEqual(input_csv.getvalue().splitlines(),
                          output_csv.getvalue().splitlines())
-
-
 
 PickleContinuousVariable = create_pickling_tests(
     "PickleContinuousVariable",
