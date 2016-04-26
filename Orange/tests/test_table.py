@@ -120,49 +120,36 @@ class TableTestCase(unittest.TestCase):
             d = data.Table("test2")
             initlen = len(d)
 
-            # remove first
             d[4, "e"] = "4ex"
             self.assertEqual(d[4, "e"], "4ex")
-            del d[0]
-            self.assertEqual(len(d), initlen - 1)
-            self.assertEqual(d[3, "e"], "4ex")
-
-            # remove middle
-            del d[2]
-            self.assertEqual(len(d), initlen - 2)
-            self.assertEqual(d[2, "e"], "4ex")
-
-            # remove middle
-            del d[4]
-            self.assertEqual(len(d), initlen - 3)
-            self.assertEqual(d[2, "e"], "4ex")
+            for index, (delIndex, pos) in zip(range(1,4), ((0, 3),  # remove first
+                                                           (2, 2),  # remove middle
+                                                           (4, 2))):  # remove middle
+                del d[delIndex]
+                self.assertEqual(len(d), initlen - index)
+                self.assertEqual(d[pos, "e"], "4ex")
 
             # remove last
             d[-1, "e"] = "was last"
-            del d[-1]
-            self.assertEqual(len(d), initlen - 4)
-            self.assertEqual(d[2, "e"], "4ex")
-            self.assertNotEqual(d[-1, "e"], "was last")
-
-            # remove one before last
-            d[-1, "e"] = "was last"
-            del d[-2]
-            self.assertEqual(len(d), initlen - 5)
-            self.assertEqual(d[2, "e"], "4ex")
-            self.assertEqual(d[-1, "e"], "was last")
+            d[-2, "e"] = "was last"
+            for index, delIndex in zip(range(4, 6), (-1, -2)):
+                del d[delIndex]
+                self.assertEqual(len(d), initlen - index)
+                self.assertEqual(d[2, "e"], "4ex")
+                if index is 4:
+                    self.assertNotEqual(d[-1, "e"], "was last")
+                else:
+                    self.assertEqual(d[-1, "e"], "was last")
 
             d[np.int_(2), "e"] = "2ex"
             del d[np.int_(2)]
             self.assertEqual(len(d), initlen - 6)
             self.assertNotEqual(d[2, "e"], "2ex")
 
-            with self.assertRaises(IndexError):
-                del d[100]
-            self.assertEqual(len(d), initlen - 6)
-
-            with self.assertRaises(IndexError):
-                del d[-100]
-            self.assertEqual(len(d), initlen - 6)
+            for index in (100, -100):
+                with self.assertRaises(IndexError):
+                    del d[index]
+                self.assertEqual(len(d), initlen - 6)
 
     def test_indexing_assign_example(self):
         def almost_equal_list(s, t):
