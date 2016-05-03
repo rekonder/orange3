@@ -1,6 +1,5 @@
 import os
 import unittest
-from _operator import index
 from itertools import chain
 from math import isnan
 import random
@@ -163,13 +162,13 @@ class TableTestCase(unittest.TestCase):
             vara = d.domain["a"]
 
             self.assertFalse(isnan(d[0, "a"]))
-            d[0] = ["3.14", "1", "f"]
-            almost_equal_list(d[0].values(), [3.14, "1", "f"])
+            for index, indexValue, realValue in ((0, ["3.14", "1", "f"], [3.14, "1", "f"]),
+                                                 (0, [3.15, 1, "t"], [3.15, "0", "t"]),
+                                                 (np.int_(0), [3.15, 2, "f"], [3.15, 2, "f"])):
+                d[index] = indexValue
+                almost_equal_list(d[0].values(), realValue)
+
             self.assertTrue(isnan(d[0, "a"]))
-            d[0] = [3.15, 1, "t"]
-            almost_equal_list(d[0].values(), [3.15, "0", "t"])
-            d[np.int_(0)] = [3.15, 2, "f"]
-            almost_equal_list(d[0].values(), [3.15, 2, "f"])
 
             with self.assertRaises(ValueError):
                 d[0] = ["3.14", "1"]
@@ -292,8 +291,7 @@ class TableTestCase(unittest.TestCase):
 
             del d[[1, 5, 2]]
             del vals[5]
-            del vals[2]
-            del vals[1]
+            del vals[1:3]
             self.assertEqual([e[0] for e in d], vals)
 
             del d[range(1, 3)]
@@ -751,7 +749,7 @@ class TableTestCase(unittest.TestCase):
         self.assertEqual(sum((col >= 4.5) * (col <= 5.1)), len(x))
 
         f.ref = 5.1
-        f.oper = filter.FilterContinuous.Equal
+        f.oper = f.Equal
         x = filter.Values([f])(d)
         self.assertTrue(np.all(x.X[:, 2] == 5.1))
         self.assertEqual(sum(col == 5.1), len(x))
@@ -1225,20 +1223,12 @@ class CreateTableWithDomain(TableTests):
 
 class CreateTableWithData(TableTests):
     def test_creates_a_table_with_given_X(self):
-        # from numpy
-        table = data.Table(np.array(self.data))
-        self.assertIsInstance(table.domain, data.Domain)
-        np.testing.assert_almost_equal(table.X, self.data)
-
-        # from list
-        table = data.Table(list(self.data))
-        self.assertIsInstance(table.domain, data.Domain)
-        np.testing.assert_almost_equal(table.X, self.data)
-
-        # from tuple
-        table = data.Table(tuple(self.data))
-        self.assertIsInstance(table.domain, data.Domain)
-        np.testing.assert_almost_equal(table.X, self.data)
+        for readData in (np.array(self.data),  # from numpy
+                         list(self.data),  # from list
+                         tuple(self.data)):  # from tuple
+            table = data.Table(readData)
+            self.assertIsInstance(table.domain, data.Domain)
+            np.testing.assert_almost_equal(table.X, self.data)
 
     def test_creates_a_table_from_domain_and_list(self):
         domain = data.Domain([data.DiscreteVariable(name="a", values="mf"),
@@ -1251,12 +1241,12 @@ class CreateTableWithData(TableTests):
         self.assertIs(table.domain, domain)
         np.testing.assert_almost_equal(
             table.X, np.array([[0, 1], [1, 2], [0, 3], [np.nan, np.nan]]))
-        np.testing.assert_almost_equal(table.Y, np.array([2, np.nan, 0, 2]))
+        np.testing.assert_equal(table.Y, np.array([2, np.nan, 0, 2]))
 
     def test_creates_a_table_from_domain_and_list_and_weights(self):
         domain = data.Domain([data.DiscreteVariable(name="a", values="mf"),
                               data.ContinuousVariable(name="b")],
-                             data.DiscreteVariable(name="y", values="abc"))
+                              data.DiscreteVariable(name="y", values="abc"))
         table = data.Table(domain, [[0, 1, 2],
                                     [1, 2, "?"],
                                     ["m", 3, "a"],
@@ -1264,8 +1254,8 @@ class CreateTableWithData(TableTests):
         self.assertIs(table.domain, domain)
         np.testing.assert_almost_equal(
             table.X, np.array([[0, 1], [1, 2], [0, 3], [np.nan, np.nan]]))
-        np.testing.assert_almost_equal(table.Y, np.array([2, np.nan, 0, 2]))
-        np.testing.assert_almost_equal(table.W, np.array([1, 2, 3, 4]))
+        np.testing.assert_equal(table.Y, np.array([2, np.nan, 0, 2]))
+        np.testing.assert_equal(table.W, np.array([1, 2, 3, 4]))
 
     def test_creates_a_table_from_domain_and_list_and_metas(self):
         metas = [data.DiscreteVariable("Meta 1", values="XYZ"),
@@ -1273,16 +1263,16 @@ class CreateTableWithData(TableTests):
                  data.StringVariable("Meta 3")]
         domain = data.Domain([data.DiscreteVariable(name="a", values="mf"),
                               data.ContinuousVariable(name="b")],
-                             data.DiscreteVariable(name="y", values="abc"),
-                             metas=metas)
+                              data.DiscreteVariable(name="y", values="abc"),
+                              metas=metas)
         table = data.Table(domain, [[0, 1, 2, "X", 2, "bb"],
                                     [1, 2, "?", "Y", 1, "aa"],
                                     ["m", 3, "a", "Z", 3, "bb"],
                                     ["?", "?", "c", "X", 1, "aa"]])
         self.assertIs(table.domain, domain)
-        np.testing.assert_almost_equal(
+        np.testing.assert_equal(
             table.X, np.array([[0, 1], [1, 2], [0, 3], [np.nan, np.nan]]))
-        np.testing.assert_almost_equal(table.Y, np.array([2, np.nan, 0, 2]))
+        np.testing.assert_equal(table.Y, np.array([2, np.nan, 0, 2]))
         np.testing.assert_array_equal(table.metas,
                                       np.array([[0, 2., "bb"],
                                                 [1, 1., "aa"],
@@ -1294,9 +1284,9 @@ class CreateTableWithData(TableTests):
         table = data.Table('iris')
         new_table = data.Table(table.domain, [d for d in table])
         self.assertIs(table.domain, new_table.domain)
-        np.testing.assert_almost_equal(table.X, new_table.X)
-        np.testing.assert_almost_equal(table.Y, new_table.Y)
-        np.testing.assert_almost_equal(table.W, new_table.W)
+        np.testing.assert_equal(table.X, new_table.X)
+        np.testing.assert_equal(table.Y, new_table.Y)
+        np.testing.assert_equal(table.W, new_table.W)
         self.assertEqual(table.domain, new_table.domain)
         np.testing.assert_array_equal(table.metas, new_table.metas)
 
@@ -1304,9 +1294,9 @@ class CreateTableWithData(TableTests):
         table = data.Table('zoo')
         new_table = data.Table(table.domain, [d for d in table])
         self.assertIs(table.domain, new_table.domain)
-        np.testing.assert_almost_equal(table.X, new_table.X)
-        np.testing.assert_almost_equal(table.Y, new_table.Y)
-        np.testing.assert_almost_equal(table.W, new_table.W)
+        np.testing.assert_equal(table.X, new_table.X)
+        np.testing.assert_equal(table.Y, new_table.Y)
+        np.testing.assert_equal(table.W, new_table.W)
         self.assertEqual(table.domain, new_table.domain)
         np.testing.assert_array_equal(table.metas, new_table.metas)
 
@@ -1501,19 +1491,16 @@ class CreateTableWithDomainAndTable(TableTests):
         new_table = data.Table.from_table(self.domain, self.table)
         self.assert_table_with_filter_matches(new_table, self.table)
 
+    def can_filter_row_helper(self, row_indices_data):
+        for indices in row_indices_data:
+            new_table = data.Table.from_table(self.domain, self.table, row_indices=indices)
+            self.assert_table_with_filter_matches(new_table, self.table, rows=indices)
+
     def test_can_filter_rows_with_list(self):
-        for indices in ([0], [1, 5, 6, 7]):
-            new_table = data.Table.from_table(
-                self.domain, self.table, row_indices=indices)
-            self.assert_table_with_filter_matches(
-                new_table, self.table, rows=indices)
+        self.can_filter_row_helper(([0], [1, 5, 6, 7]))
 
     def test_can_filter_row_with_slice(self):
-        for slice_ in self.interesting_slices:
-            new_table = data.Table.from_table(
-                self.domain, self.table, row_indices=slice_)
-            self.assert_table_with_filter_matches(
-                new_table, self.table, rows=slice_)
+        self.can_filter_row_helper(self.interesting_slices)
 
     def test_can_use_attributes_as_new_columns(self):
         a, c, m = column_sizes(self.table)
