@@ -2,19 +2,20 @@
 # pylint: disable=missing-docstring
 
 import unittest
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock
 import numpy as np
 
 import Orange
 from Orange.data import Domain, Table, DiscreteVariable
-from Orange.preprocess import RemoveNaNClasses
+from Orange.preprocess import RemoveNaNClasses, preprocess
 
 
 class TestPreprocess(unittest.TestCase):
     def test_read_data_calls_reader(self):
-        class MockPreprocessor(Orange.preprocess.preprocess.Preprocess):
+        class MockPreprocessor(preprocess.Preprocess):
             __init__ = Mock(return_value=None)
             __call__ = Mock()
+
             @classmethod
             def reset(cls):
                 cls.__init__.reset_mock()
@@ -42,20 +43,20 @@ class TestPreprocess(unittest.TestCase):
 class RemoveConstant(unittest.TestCase):
     def test_remove_columns(self):
         X = np.random.rand(6, 4)
-        X[:, (1,3)] = 5
+        X[:, (1, 3)] = 5
         X[3, 1] = np.nan
         X[1, 1] = np.nan
-        data = Orange.data.Table(X)
-        d = Orange.preprocess.preprocess.RemoveConstant(data)
+        data = Table(X)
+        d = preprocess.RemoveConstant(data)
         self.assertEqual(len(d.domain.attributes), 2)
 
-        pp_rc = Orange.preprocess.preprocess.RemoveConstant()
+        pp_rc = preprocess.RemoveConstant()
         d = pp_rc(data)
         self.assertEqual(len(d.domain.attributes), 2)
 
     def test_nothing_to_remove(self):
         data = Orange.data.Table("iris")
-        d = Orange.preprocess.preprocess.RemoveConstant(data)
+        d = preprocess.RemoveConstant(data)
         self.assertEqual(len(d.domain.attributes), 4)
 
 
