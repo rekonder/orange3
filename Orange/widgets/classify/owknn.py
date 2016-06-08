@@ -25,16 +25,17 @@ class OWKNNLearner(OWBaseLearner):
 
     def add_main_layout(self):
         box = gui.vBox(self.controlArea, "Neighbors")
-        gui.spin(box, self, "n_neighbors", 1, 100, label="Number of neighbors:",
-                 alignment=Qt.AlignRight, callback=self.settings_changed)
-        gui.comboBox(box, self, "metric_index", label="Metric:",
-                     orientation=Qt.Horizontal,
-                     items=[i.capitalize() for i in self.metrics],
-                     callback=self.settings_changed)
-        gui.comboBox(box, self, "weight_type", label="Weight:",
-                     orientation=Qt.Horizontal,
-                     items=[i.capitalize() for i in self.weights],
-                     callback=self.settings_changed)
+        neighbours = gui.spin(box, self, "n_neighbors", 1, 100, label="Number of neighbors:",
+                              alignment=Qt.AlignRight, callback=self.settings_changed)
+        metric = gui.comboBox(box, self, "metric_index", label="Metric:",
+                              orientation=Qt.Horizontal,
+                              items=[i.capitalize() for i in self.metrics],
+                              callback=self.settings_changed)
+        weight = gui.comboBox(box, self, "weight_type", label="Weight:",
+                              orientation=Qt.Horizontal,
+                              items=[i.capitalize() for i in self.weights],
+                              callback=self.settings_changed)
+        self.button_opts = [neighbours, metric, weight]
 
     def create_learner(self):
         return self.LEARNER(
